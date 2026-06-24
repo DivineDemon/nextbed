@@ -1,0 +1,11 @@
+agency_id,interview_date,interviewer,interviewee_name,interviewee_role,company_name,state,employee_count,icp_1_softpro,icp_2_independent,icp_3_size_5_50,icp_4_commercial_vol,icp_5_external_vendor,icp_6_softpro_360,icp_fit_score,qualified_for_gate,commercial_files_per_month,pct_complex_files,complex_file_hours,current_outsource_spend,outsource_scope,top_counties,county_digital_pct,q8_prior_vendors,q9_frustration,q10_datatrace_forward,import_time_min,primary_underwriter,q12_vendor_wp_ok,q13_uw_pushback,underwriter_blocker_hard,blocker_detail,q14_pilot_interest,q15_price_199,q16_price_floor,q17_outcome_vs_hourly,q18_ai_tools,q19_would_not_use,q20_pilot_149,q21_sample_file,design_partner_candidate,referral_given,key_objection,notes
+A01,YYYY-MM-DD,,Example Contact,Title Manager,Example Agency TX,TX,18,yes,yes,yes,yes,yes,yes,6,yes,12,35%,14,$175/file,commitment draft,"Harris, Dallas",85%,HitechDigital,TAT and format,yes,75,Stewart,yes,no,no,,5,fair,$125,outcome,Zaito pilot,E&O concerns,yes,yes,yes,no,,
+A02,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+A03,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+A04,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+A05,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+A06,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+A07,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+A08,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+A09,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+A10,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,

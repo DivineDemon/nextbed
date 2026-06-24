@@ -1,0 +1,2628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Research — Title Workflow to MVP</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface2: #243044;
+      --border: #2d3a4f;
+      --text: #e8edf4;
+      --muted: #8b9cb3;
+      --accent: #3b82f6;
+      --accent2: #10b981;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --selected: #10b981;
+      --eliminated: #ef4444;
+      --font: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+    }
+    nav h2 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    nav ul { list-style: none; }
+    nav li { margin-bottom: 0.35rem; }
+    nav a {
+      display: block;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    nav a:hover { background: var(--surface2); color: var(--text); text-decoration: none; }
+    main { padding: 2rem 2.5rem 4rem; width: 100%; }
+    header.doc-header { margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+    header.doc-header h1 { font-size: 1.85rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 0.75rem; }
+    header.doc-header .lead { color: var(--muted); max-width: 720px; }
+    .meta-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
+    .pill { font-size: 0.75rem; padding: 0.25rem 0.65rem; border-radius: 999px; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); }
+    .pill.done { border-color: var(--selected); color: var(--selected); }
+    section { margin-bottom: 3rem; scroll-margin-top: 1.5rem; }
+    h2 { font-size: 1.35rem; font-weight: 600; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; margin: 1.5rem 0 0.75rem; color: var(--text); }
+    h4 { font-size: 0.9rem; margin: 1rem 0 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    p { margin-bottom: 0.75rem; color: var(--muted); }
+    p strong, li strong { color: var(--text); }
+    ul.constraints { margin: 0.75rem 0 1rem 1.25rem; color: var(--muted); }
+    ul.constraints li { margin-bottom: 0.35rem; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
+    .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; }
+    .kpi .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .kpi .value { font-size: 1.35rem; font-weight: 600; margin: 0.25rem 0; }
+    .kpi .sub { font-size: 0.78rem; color: var(--muted); }
+    .kpi.selected { border-color: var(--selected); }
+    .kpi.selected .value { color: var(--selected); }
+    .kpi.warn .value { color: var(--warn); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 1rem 0; background: var(--surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+    th, td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: var(--surface2); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(59, 130, 246, 0.04); }
+    .verdict-eliminated { color: var(--eliminated); font-weight: 600; }
+    .verdict-pass { color: var(--selected); font-weight: 600; }
+    .verdict-warn { color: var(--warn); font-weight: 600; }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin: 1.25rem 0; }
+    .chart-card h4 { margin-top: 0; margin-bottom: 0.75rem; }
+    .chart-wrap { position: relative; height: 280px; }
+    .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem; }
+    .mermaid-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; margin: 1.25rem 0; overflow-x: auto; }
+    blockquote.final-spec { border-left: 3px solid var(--selected); padding: 1rem 1.25rem; margin: 1rem 0; background: rgba(16, 185, 129, 0.08); border-radius: 0 8px 8px 0; color: var(--text); font-size: 0.95rem; }
+    blockquote.locked { border-left-color: var(--accent); background: rgba(59, 130, 246, 0.08); }
+    .checklist { list-style: none; margin: 0.75rem 0; }
+    .checklist li { padding: 0.4rem 0; padding-left: 1.5rem; position: relative; color: var(--muted); }
+    .checklist li::before { content: "☐"; position: absolute; left: 0; color: var(--warn); }
+    .checklist li.done::before { content: "☑"; color: var(--selected); }
+    .phase-badge { display: inline-block; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(16,185,129,0.15); color: var(--selected); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-left: 0.5rem; vertical-align: middle; }
+    .phase-badge.pending { background: rgba(139,156,179,0.15); color: var(--muted); }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: relative; height: auto; }
+      main { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <h2>Contents</h2>
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#phase0">Phase 0 — Pre-Flight</a></li>
+        <li><a href="#phase1">Phase 1 — Workflow Map</a></li>
+        <li><a href="#phase2">Phase 2 — Competitor Teardown</a></li>
+        <li><a href="#phase3">Phase 3 — Service Blueprint</a></li>
+        <li><a href="#phase4">Phase 4 — MVP Spec</a></li>
+        <li><a href="#phase5">Phase 5 — Integration Map</a></li>
+        <li><a href="#phase6">Phase 6 — Validation Plan</a></li>
+        <li><a href="#bibliography">Bibliography</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <header class="doc-header">
+        <h1>Product Research</h1>
+        <p class="lead">From market-selected wedge to buildable MVP — desk research first, structured validation second. Phase 0 locks scope before workflow mapping begins.</p>
+        <div class="meta-pills">
+          <span class="pill done">Phase 0 Complete</span>
+          <span class="pill done">Phase 1 Complete</span>
+          <span class="pill done">Phase 2 Complete</span>
+          <span class="pill done">Phase 3 Complete</span>
+          <span class="pill done">Phase 4 Complete</span>
+          <span class="pill done">Phase 5 Complete</span>
+          <span class="pill done">Phase 6 Complete</span>
+          <span class="pill">Commercial Complex Files</span>
+          <span class="pill">SoftPro-First</span>
+          <span class="pill">Managed Bureau</span>
+          <span class="pill">US-Only v1</span>
+        </div>
+      </header>
+
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>Market research (<a href="research-process.html">research-process.html</a>) selected <strong>title &amp; settlement</strong> and narrowed the wedge to complex-file examination for independent agencies on non-Qualia stacks. Product research answers: <em>what exactly do we build, deliver, and charge for?</em></p>
+
+        <div class="kpi-grid">
+          <div class="kpi selected">
+            <div class="label">Input</div>
+            <div class="value">Market wedge</div>
+            <div class="sub">From Phase 10 market research</div>
+          </div>
+          <div class="kpi selected">
+            <div class="label">Phase 0 status</div>
+            <div class="value">Locked</div>
+            <div class="sub">5 pre-flight gates closed</div>
+          </div>
+          <div class="kpi selected">
+            <div class="label">Status</div>
+            <div class="value">Ready</div>
+            <div class="sub">Desk research complete — interviews next</div>
+          </div>
+          <div class="kpi warn">
+            <div class="label">Hypotheses to test</div>
+            <div class="value">5</div>
+            <div class="sub">Via 5–10 discovery calls</div>
+          </div>
+        </div>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart LR
+    MR[Market Research] --> P0[Phase 0 Pre-Flight]
+    P0 --> P1[Phase 1 Workflow]
+    P1 --> P2[Phase 2 Teardown]
+    P2 --> P3[Phase 3 Blueprint]
+    P3 --> P4[Phase 4 MVP Spec]
+    P4 --> P5[Phase 5 Integrations]
+    P5 --> P6[Phase 6 Validation]
+    P6 --> BUILD[Build / Pilot]
+    style P0 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style P6 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style MR fill:#1a2332,stroke:#2d3a4f,color:#8b9cb3
+          </pre>
+        </div>
+      </section>
+
+      <!-- PHASE 0 -->
+      <section id="phase0">
+        <h2>Phase 0 — Pre-Flight <span class="phase-badge">Complete</span></h2>
+        <p>Five gates that must close before desk research begins. All locked June 2026.</p>
+
+        <ul class="checklist">
+          <li class="done">Primary wedge vector selected (with fallback)</li>
+          <li class="done">Complex-file v1 taxonomy defined (in / out)</li>
+          <li class="done">Product research methodology set (desk → validation → pilot)</li>
+          <li class="done">Competitive landscape refreshed since market research doc</li>
+          <li class="done">Phases 1–6 roadmap and deliverables defined</li>
+        </ul>
+
+        <blockquote class="final-spec">
+          <strong>Locked product thesis:</strong> A managed examination bureau for <em>commercial complex files</em> — independent US title agencies on SoftPro (primary) and legacy TPS (secondary), outcome-priced per file, human examiner at agency approves, runs alongside existing TPS. Not software-only augmentation; not residential purchase.
+        </blockquote>
+      </section>
+
+      <!-- 0.1 WEDGE LOCK -->
+      <section id="wedge-lock">
+        <h2>0.1 Primary Wedge Lock</h2>
+        <p>Phase 10 of market research listed four differentiation options. Phase 0 selects one primary path and one fallback.</p>
+
+        <table>
+          <thead><tr><th>Dimension</th><th>Primary (locked)</th><th>Fallback</th><th>Rejected for v1</th><th>Rationale</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>File type</strong></td>
+              <td class="verdict-pass"><strong>Commercial complex</strong></td>
+              <td>Multi-parcel residential with 50+ doc chain</td>
+              <td class="verdict-eliminated">Simple residential purchase</td>
+              <td>Zaito pilot is residential-only; offshore wins simple files on price</td>
+            </tr>
+            <tr>
+              <td><strong>TPS focus</strong></td>
+              <td class="verdict-pass"><strong>SoftPro-first</strong></td>
+              <td>Legacy / proprietary TPS</td>
+              <td class="verdict-warn">RamQuest (monitor only)</td>
+              <td>~14K SoftPro sites; Qualia owns RamQuest — Clear bundling risk</td>
+            </tr>
+            <tr>
+              <td><strong>Delivery model</strong></td>
+              <td class="verdict-pass"><strong>Managed examination bureau</strong></td>
+              <td>—</td>
+              <td class="verdict-eliminated">In-house augmentation SaaS</td>
+              <td>Zaito owns augmentation lane; bureau = outsource overflow they already use</td>
+            </tr>
+            <tr>
+              <td><strong>Geography</strong></td>
+              <td class="verdict-pass"><strong>US-only v1</strong></td>
+              <td>UK via ntitle-style BPO (Phase 2+)</td>
+              <td class="verdict-eliminated">AU parallel launch</td>
+              <td>Separate records/licensing; US wedge unproven first</td>
+            </tr>
+            <tr>
+              <td><strong>Pricing model</strong></td>
+              <td class="verdict-pass"><strong>Outcome-priced per complex file</strong></td>
+              <td>—</td>
+              <td class="verdict-eliminated">Seat-based SaaS</td>
+              <td>Aligned with agency economics; market research target $100–300/file</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>ICP (refined from market research)</h3>
+        <table>
+          <thead><tr><th>Attribute</th><th>v1 Target</th></tr></thead>
+          <tbody>
+            <tr><td>Agency type</td><td>Independent title agency (not underwriter-owned roll-up)</td></tr>
+            <tr><td>Size</td><td>5–50 employees</td></tr>
+            <tr><td>TPS</td><td>SoftPro Standard / Select / 360 (hosted or on-prem)</td></tr>
+            <tr><td>Volume signal</td><td>Handles commercial or mixed book; currently offshore or overloaded examiners on hard files</td></tr>
+            <tr><td>Exclusion</td><td>Qualia Core customers; Propy-acquired agencies; pure residential shops</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Positioning vs Zaito</h3>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Wedge Overlap Map</h4>
+            <div class="chart-wrap">
+              <canvas id="chartWedgeOverlap"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Decision Matrix — Why Commercial + Bureau</h4>
+            <table>
+              <thead><tr><th>Option</th><th>Zaito overlap</th><th>Margin potential</th><th>Verdict</th></tr></thead>
+              <tbody>
+                <tr><td>Residential augmentation</td><td>High — their pilot</td><td>Low ($75–200 fee floor)</td><td class="verdict-eliminated">Reject</td></tr>
+                <tr><td>Commercial augmentation</td><td>Medium</td><td>Medium</td><td class="verdict-warn">Fallback</td></tr>
+                <tr><td>Commercial managed bureau</td><td>Low</td><td>High ($100–300+ target)</td><td class="verdict-pass"><strong>Primary</strong></td></tr>
+                <tr><td>UK expansion day-one</td><td>Low</td><td>Unknown</td><td class="verdict-eliminated">Defer</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 0.2 FILE TAXONOMY -->
+      <section id="file-taxonomy">
+        <h2>0.2 Complex-File v1 Taxonomy</h2>
+        <p>Operational definition grounded in <a href="https://www.alta.org/file/Measuring-the-Complexity-of-Title-Production-Survey-Summary.pdf" target="_blank">ALTA Complexity Study (2026)</a> — 449 professionals, 47 states. A file is <strong>complex</strong> if it meets any one trigger below.</p>
+
+        <h3>Complexity triggers (any one = in scope)</h3>
+        <table>
+          <thead><tr><th>#</th><th>Trigger</th><th>ALTA / industry signal</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><strong>50+ recorded documents</strong> in chain</td><td>21% of purchase transactions (ALTA 2026)</td></tr>
+            <tr><td>2</td><td><strong>Probate / estate / heirship</strong> affecting vesting</td><td>44% report issues beyond standard underwriting; probate cited as curative pain</td></tr>
+            <tr><td>3</td><td><strong>Commercial property</strong> (retail, office, industrial, multi-family 5+)</td><td>ALTA survey + easement/encumbrance complexity; ALTA/NSPS survey coordination</td></tr>
+            <tr><td>4</td><td><strong>Metes &amp; bounds / legal description defects</strong></td><td>Ownership docs rated hardest to review (24.2% of respondents)</td></tr>
+            <tr><td>5</td><td><strong>Curative beyond standard underwriting</strong> — gaps, unreleased liens, corrective instruments</td><td>44% require action beyond standard; 59% cite mortgage release pain</td></tr>
+          </tbody>
+        </table>
+
+        <h3>In scope for v1 (priority order)</h3>
+        <table>
+          <thead><tr><th>Priority</th><th>File type</th><th>Why v1</th></tr></thead>
+          <tbody>
+            <tr><td>P0</td><td><strong>Commercial purchase</strong> — multi-tenant, strip, office, industrial</td><td>Highest margin; Zaito not publicly targeting; ALTA survey complexity</td></tr>
+            <tr><td>P0</td><td><strong>Commercial refinance / portfolio</strong></td><td>Repeat bureau relationship; exam-heavy not search-only</td></tr>
+            <tr><td>P1</td><td><strong>Probate-affected residential or commercial</strong></td><td>Zaito covers but we differentiate on bureau delivery + commercial mix</td></tr>
+            <tr><td>P1</td><td><strong>Long-chain residential</strong> (50+ docs, heir property, fire-loss counties)</td><td>2–4 week turnaround today; bureau economics work at $200+</td></tr>
+            <tr><td>P2</td><td><strong>CCRs / MUD-PUD / HOA vesting issues</strong></td><td>Zaito core competency — deliver only as part of commercial bundle in v1</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Explicitly out of scope for v1</h3>
+        <table>
+          <thead><tr><th>Excluded</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr><td>Standard residential purchase (&lt;11 docs, clean chain)</td><td>Offshore LPO at $75–200; Zaito residential pilot</td></tr>
+            <tr><td>Refi-only standard residential</td><td>Low exam depth; automation commoditizing</td></tr>
+            <tr><td>Qualia Core / Clear customers</td><td>AI bundled free; not addressable</td></tr>
+            <tr><td>Becoming licensed title agency</td><td>State licenses + underwriter appointments required</td></tr>
+            <tr><td>Curative execution (payoffs, recording)</td><td>v1 delivers examination output; agency executes curative</td></tr>
+          </tbody>
+        </table>
+
+        <div class="chart-card">
+          <h4>ALTA Document Volume per Transaction</h4>
+          <div class="chart-wrap">
+            <canvas id="chartALTADocs"></canvas>
+          </div>
+          <p style="font-size:0.8rem;margin-top:0.5rem;">Source: ALTA Measuring the Complexity of Title Production (2026). v1 targets the 21% tail (50+ documents) plus commercial regardless of doc count.</p>
+        </div>
+      </section>
+
+      <!-- 0.3 METHODOLOGY -->
+      <section id="methodology">
+        <h2>0.3 Product Research Methodology</h2>
+        <p>Market research ran under <strong>no interviews, data only</strong>. Product research loosens that constraint in phases — desk research first, validation only after we know what to ask.</p>
+
+        <table>
+          <thead><tr><th>Phase</th><th>Method</th><th>Interviews?</th><th>Output</th></tr></thead>
+          <tbody>
+            <tr><td><strong>0</strong></td><td>Decision lock + competitive refresh</td><td>No</td><td>This document</td></tr>
+            <tr><td><strong>1</strong></td><td>Desk research — ALTA, SoftPro docs, job posts, forums, examiner workflows</td><td>No</td><td>End-to-end workflow map</td></tr>
+            <tr><td><strong>2</strong></td><td>Competitor product teardown — Zaito, LPO, TitleTrackr, Qualia Clear</td><td>No</td><td>Feature/service comparison matrix</td></tr>
+            <tr><td><strong>3</strong></td><td>Service blueprint — roles, SLAs, deliverables, audit trail, underwriter handoff</td><td>No</td><td>Operating model doc</td></tr>
+            <tr><td><strong>4</strong></td><td>MVP spec — smallest paid unit, acceptance criteria, pricing hypothesis</td><td>No</td><td>Buildable spec</td></tr>
+            <tr><td><strong>5</strong></td><td>Integration map — SoftPro hooks, DataTrace, county records, output format</td><td>No</td><td>Technical integration doc</td></tr>
+            <tr><td><strong>6</strong></td><td>Validation plan + <strong>5–10 agency discovery calls</strong></td><td><strong>Yes</strong></td><td>Go/no-go checklist</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Carried constraints (unchanged from market research)</h3>
+        <ul class="constraints">
+          <li>Vendor-to-agency model — never become licensed principal</li>
+          <li>Human examiner at agency approves all output (E&amp;O / underwriter acceptance)</li>
+          <li>Full audit trail on every file</li>
+          <li>Runs alongside existing TPS — no rip-and-replace</li>
+          <li>Global incumbent check before any geo expansion (Nected rule applies to product layer too)</li>
+        </ul>
+
+        <h3>Open validations (Phase 6 targets)</h3>
+        <ul class="checklist">
+          <li>Independent agencies will pay an outsider for managed commercial examination</li>
+          <li>Underwriter acceptance of vendor AI output on commercial files</li>
+          <li>Exact pricing vs Zaito and offshore LPO on complex files</li>
+          <li>Zaito POC → paid conversion rate (proxy for market willingness)</li>
+          <li>Commercial vs residential wedge unit economics at scale</li>
+        </ul>
+      </section>
+
+      <!-- 0.4 COMPETITIVE REFRESH -->
+      <section id="competitive-refresh">
+        <h2>0.4 Competitive Refresh</h2>
+        <p>Re-verified June 2026 — market research doc cited re-check before build. No material change to the ~12-month Zaito window thesis.</p>
+
+        <table>
+          <thead><tr><th>Player</th><th>Status since market research</th><th>Impact on wedge</th><th>Change?</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Zaito</strong></td>
+              <td>Still <strong>$0 disclosed funding</strong>. Rebrand complete (Feb 2026). Pilot: <strong>residential purchase only</strong>, limited slots. Hiring SDE(AI) intern + staff. Zai-XM covers deeds, probate, CCRs, judgments, metes &amp; bounds. Outcome-based pricing; SoftPro + Resware integration.</td>
+              <td>Direct competitor on augmentation; <span class="verdict-pass">commercial + bureau lane still open</span></td>
+              <td class="verdict-warn">No funding yet; pilot narrowed to residential</td>
+            </tr>
+            <tr>
+              <td><strong>Qualia / Clear 2.0</strong></td>
+              <td>Clear 2.0 launched with specialized curative agents, 35–50% processing time reduction claim. RamQuest acquired Jan 2025. <strong>SoftPro not acquired</strong> — remains separate competitor.</td>
+              <td>High for Qualia/RamQuest users; <span class="verdict-pass">zero impact on SoftPro ICP</span></td>
+              <td class="verdict-warn">Clear 2.0 strengthens Qualia moat</td>
+            </tr>
+            <tr>
+              <td><strong>Titl</strong></td>
+              <td>$2.5M seed (Jan 2026). Registry / instant title vision. Expanding to ~20 states. Blockchain + monitoring focus.</td>
+              <td>Adjacent — infrastructure/registry, not bureau examination</td>
+              <td class="verdict-pass">No collision</td>
+            </tr>
+            <tr>
+              <td><strong>TitleTrackr</strong></td>
+              <td>AI abstract/search automation. Claims up to 90% faster for abstractors. Anti-Qualia positioning.</td>
+              <td>Tool layer, not managed service — potential integration partner or competitor on search only</td>
+              <td class="verdict-pass">Different lane</td>
+            </tr>
+            <tr>
+              <td><strong>Offshore LPO</strong></td>
+              <td>India/PH manual search unchanged. Price floor on simple files.</td>
+              <td>Confirms v1 exclusion of simple residential</td>
+              <td class="verdict-pass">Stable</td>
+            </tr>
+            <tr>
+              <td><strong>Propy roll-up</strong></td>
+              <td>$100M credit facility; agency acquisition continues</td>
+              <td>Shrinks ICP pool over time — urgency unchanged</td>
+              <td class="verdict-warn">Ongoing</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="kpi-grid">
+          <div class="kpi selected">
+            <div class="label">Zaito funding</div>
+            <div class="value">$0</div>
+            <div class="sub">No change — window holds</div>
+          </div>
+          <div class="kpi selected">
+            <div class="label">Zaito pilot scope</div>
+            <div class="value">Residential</div>
+            <div class="sub">Commercial lane open</div>
+          </div>
+          <div class="kpi warn">
+            <div class="label">Qualia Clear 2.0</div>
+            <div class="value">Live</div>
+            <div class="sub">SoftPro ICP unaffected</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Window (base)</div>
+            <div class="value">~12 mo</div>
+            <div class="sub">Through mid-2027</div>
+          </div>
+        </div>
+
+        <blockquote class="locked">
+          <strong>Refresh conclusion:</strong> No blocker found. Commercial managed bureau on SoftPro remains differentiated. Qualia consolidation (RamQuest, Clear 2.0) increases urgency for SoftPro agencies but does not close our lane. Zaito residential pilot confirms they are not yet competing for commercial bureau work.
+        </blockquote>
+      </section>
+
+      <!-- 0.5 ROADMAP -->
+      <section id="roadmap">
+        <h2>0.5 Product Research Roadmap (Phases 1–6)</h2>
+
+        <table>
+          <thead><tr><th>Phase</th><th>Name</th><th>Key questions</th><th>Deliverable</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>Pre-Flight</td><td>What are we building, for whom, how do we research it?</td><td>product-research.html (this doc)</td><td class="verdict-pass">Complete</td></tr>
+            <tr><td>1</td><td>Workflow Map</td><td>What happens from order intake to commitment on a commercial complex file?</td><td>Swimlane diagram + task/time breakdown</td><td class="verdict-pass">Complete</td></tr>
+            <tr><td>2</td><td>Competitor Teardown</td><td>What do Zaito, LPO, TitleTrackr actually deliver? At what price?</td><td>Comparison matrix + gap analysis</td><td class="verdict-pass">Complete</td></tr>
+            <tr><td>3</td><td>Service Blueprint</td><td>Who does what — AI, bureau examiner, agency examiner, underwriter?</td><td>SLA + deliverable spec + audit trail requirements</td><td class="verdict-pass">Complete</td></tr>
+            <tr><td>4</td><td>MVP Spec</td><td>Smallest unit an agency pays for on file #1?</td><td>Feature list + acceptance criteria + pricing hypothesis</td><td class="verdict-pass">Complete</td></tr>
+            <tr><td>5</td><td>Integration Map</td><td>How does output land in SoftPro? What data sources?</td><td>TPS integration spec + data plant map</td><td class="verdict-pass">Complete</td></tr>
+            <tr><td>6</td><td>Validation Plan</td><td>Will agencies pay? Will underwriters accept?</td><td>Interview script + go/no-go gates</td><td class="verdict-pass">Complete</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+gantt
+    title Product Research Timeline (projected)
+    dateFormat YYYY-MM-DD
+    axisFormat %b %d
+    section Phase 0
+        Pre-Flight lock           :done, p0, 2026-06-21, 1d
+    section Desk Research
+        Workflow map              :done, p1, 2026-06-22, 1d
+        Competitor teardown       :done, p2, 2026-06-22, 1d
+        Service blueprint         :done, p3, 2026-06-22, 1d
+    section Spec
+        MVP spec                  :done, p4, 2026-06-22, 1d
+        Integration map           :done, p5, 2026-06-22, 1d
+    section Validation
+        Validation plan + calls   :done, p6, 2026-06-22, 1d
+          </pre>
+        </div>
+      </section>
+
+      <!-- PLACEHOLDER PHASES -->
+      <!-- PHASE 1 -->
+      <section id="phase1">
+        <h2>Phase 1 — Workflow Map <span class="phase-badge">Complete</span></h2>
+        <p>End-to-end map of a <strong>commercial complex file</strong> on SoftPro — from order intake through commitment issuance. Sources: ALTA 2024/2026 complexity studies, ALTA residential closing flowchart, SoftPro commercial/automation docs, commercial examiner job descriptions, offshore bureau workflow models.</p>
+
+        <blockquote class="final-spec">
+          <strong>Key finding:</strong> Our managed bureau wedge sits in <em>Search → Examination → Commitment draft</em> — ALTA Segment 1 plus the typing/drafting work that precedes underwriter review. Curative execution (Segment 2) and closing (Segment 3) stay with the agency. On difficult files, pre-closing work alone is ~16 staff-hours; bureau-addressable work is estimated at 10–18 hrs per commercial complex file.
+        </blockquote>
+      </section>
+
+      <section id="p1-overview">
+        <h2>1.1 ALTA Four-Segment Framework</h2>
+        <p>ALTA organizes title production into four functional segments. Phase 0 locked our MVP to Segment 1 output plus commitment drafting — not Segments 2–4 execution.</p>
+
+        <table>
+          <thead><tr><th>Segment</th><th>What happens</th><th>Difficult-file signal (ALTA 2026)</th><th>Our role</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>1. Search &amp; Examination</strong></td>
+              <td>Verify ownership, pull 11–50+ docs from 9+ sources, analyze chain, easements, mortgages</td>
+              <td>21% of purchases involve 50+ records; ownership/mortgage/easement docs rated hardest</td>
+              <td class="verdict-pass"><strong>Core bureau scope</strong></td>
+            </tr>
+            <tr>
+              <td><strong>2. Resolving Title Issues (Curative)</strong></td>
+              <td>Payoffs, releases, probate resolution, corrective instruments, gap cures</td>
+              <td>44% need action beyond standard underwriting; 59% cite mortgage releases as top pain</td>
+              <td class="verdict-eliminated">Agency-owned — bureau flags only</td>
+            </tr>
+            <tr>
+              <td><strong>3. Closing &amp; Settlement</strong></td>
+              <td>Lender coordination, doc prep, signing, funding, disbursement</td>
+              <td>Difficult files: ~28.6 staff-hrs in closing segment alone (ALTA 2026)</td>
+              <td class="verdict-eliminated">Out of scope</td>
+            </tr>
+            <tr>
+              <td><strong>4. Policy Issuance</strong></td>
+              <td>Recording, final policy, post-close protection</td>
+              <td>30–40% of losses from non-public-record risks</td>
+              <td class="verdict-eliminated">Out of scope</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Total Staff Hours per File (ALTA / ndp analytics)</h4>
+            <div class="chart-wrap">
+              <canvas id="chartTotalHours"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Closing Segment Hours — Difficult File (ALTA 2026)</h4>
+            <div class="chart-wrap">
+              <canvas id="chartClosingHours"></canvas>
+            </div>
+            <p style="font-size:0.78rem;margin-top:0.5rem;">Closing tasks only (Segment 3). Pre-closing differential on difficult files ≈ 23 hrs — primarily search, exam, and curative.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="p1-swimlane">
+        <h2>1.2 Swimlane — Commercial Complex File</h2>
+        <p>Roles across a typical independent SoftPro agency workflow. Green zone = managed bureau deliverable.</p>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart TB
+    subgraph agency [Agency — SoftPro]
+        A1[Order intake &amp; commercial setup] --> A2[Assign file / set milestones]
+        A2 --> A3[Receive bureau package]
+        A3 --> A4[Agency examiner review &amp; approve]
+        A4 --> A5[Submit to underwriter]
+        A5 --> A6[Curative execution]
+        A6 --> A7[Pre-close updates &amp; closing]
+    end
+    subgraph bureau [Managed Bureau — Our Product]
+        B1[Receive order spec + parcel list] --> B2[Scope searches per parcel]
+        B2 --> B3[Retrieve &amp; abstract records]
+        B3 --> B4[Chain analysis + entity/judgment search]
+        B4 --> B5[Examination + risk flags]
+        B5 --> B6[Draft Schedules A / B-I / B-II / C]
+        B6 --> B7[Audit trail + deliver package]
+    end
+    subgraph underwriter [Underwriter]
+        U1[Review commitment] --> U2[Approve / revise requirements]
+    end
+    A2 -->|Send file package| B1
+    B7 -->|Commitment-ready draft| A3
+    A5 --> U1
+    U2 --> A6
+    style B1 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style B2 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style B3 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style B4 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style B5 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style B6 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style B7 fill:#064e3b,stroke:#10b981,color:#e8edf4
+          </pre>
+        </div>
+      </section>
+
+      <section id="p1-steps">
+        <h2>1.3 Step-by-Step Breakdown</h2>
+        <p>Derived from ALTA closing flowchart task sequence (Steps 1–3 = pre-commitment), commercial examiner job descriptions, and offshore bureau SOPs. Steps marked <span class="verdict-pass">BUREAU</span> are in our MVP scope.</p>
+
+        <h3>Stage A — Order Opening (Agency)</h3>
+        <table>
+          <thead><tr><th>Step</th><th>Task</th><th>Actor</th><th>SoftPro action</th></tr></thead>
+          <tbody>
+            <tr><td>A1</td><td>Receive contract / order from broker, lender, or developer</td><td>Order desk</td><td>Open order; set commercial order type</td></tr>
+            <tr><td>A2</td><td>Confirm parties, property address, legal description(s), closing date</td><td>Order desk</td><td>Enter buyers, sellers, lenders; add parcels</td></tr>
+            <tr><td>A3</td><td>Review contract terms, FIRPTA/GTO flags, lender instructions</td><td>Escrow / title mgr</td><td>Set task timeline from contract deadlines</td></tr>
+            <tr><td>A4</td><td>Determine lender title policy requirements (endorsements, chain depth)</td><td>Title manager</td><td>Link underwriter instructions to file</td></tr>
+            <tr><td>A5</td><td>Package file for bureau: parcel list, entity names, search scope, underwriter guidelines</td><td>Title manager</td><td>Export order data; attach lender package</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Stage B — Search &amp; Retrieval <span class="verdict-pass">BUREAU</span></h3>
+        <table>
+          <thead><tr><th>Step</th><th>Task</th><th>Sources</th><th>Complex-file delta</th></tr></thead>
+          <tbody>
+            <tr><td>B1</td><td>Define search scope per parcel (chain depth, name runs, judgment period)</td><td>Underwriter guidelines, state statute</td><td>Commercial: 60+ year chain typical; multi-state portfolios</td></tr>
+            <tr><td>B2</td><td>Order title plant / TPS search via SoftPro 360 → DataTrace or abstractor</td><td>Title plant, DataTrace TPS</td><td>Multiple orders per parcel; 27% of counties still need in-person retrieval</td></tr>
+            <tr><td>B3</td><td>Tax search — current status, delinquencies, special assessments</td><td>TaxSource / county assessor</td><td>Commercial: HOA/MUD/PUD, special improvement districts</td></tr>
+            <tr><td>B4</td><td>Retrieve deeds, mortgages, assignments, releases, liens from recorder</td><td>County recorder, title plant</td><td>50+ documents in 21% of purchases; fire-loss / gap counties</td></tr>
+            <tr><td>B5</td><td>Name &amp; judgment search — current owner, prior owners, buyer, affiliated entities</td><td>Court records, UCC filings</td><td>LLC/trust chains; search entity variations and DBAs</td></tr>
+            <tr><td>B6</td><td>Probate / estate search if vesting or chain triggers heirship</td><td>Probate court, genealogy records</td><td>2–4 week TAT in heir-property cases; intestate estates</td></tr>
+            <tr><td>B7</td><td>Compile abstract / run sheet with instrument list and key data extracted</td><td>All above</td><td>Multi-parcel: separate chain per parcel + common encumbrances</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Stage C — Examination <span class="verdict-pass">BUREAU</span></h3>
+        <table>
+          <thead><tr><th>Step</th><th>Task</th><th>Output</th><th>ALTA pain signal</th></tr></thead>
+          <tbody>
+            <tr><td>C1</td><td>Verify unbroken chain of title per parcel</td><td>Chain chart; gap flags</td><td>44% need action beyond standard underwriting</td></tr>
+            <tr><td>C2</td><td>Analyze vesting — entity status, authority to convey, trust terms</td><td>Vesting memo</td><td>Commercial: multi-entity ownership common</td></tr>
+            <tr><td>C3</td><td>Review mortgages, assignments, unreleased liens</td><td>Open lien list → B-I requirements</td><td>59% cite mortgage release as top curative pain</td></tr>
+            <tr><td>C4</td><td>Analyze easements, CCRs, restrictions, leases affecting use</td><td>Exception list → B-II</td><td>Easements rated 2nd-hardest doc type (21% of respondents)</td></tr>
+            <tr><td>C5</td><td>Review legal descriptions — metes &amp; bounds, multi-parcel consistency</td><td>Description flags</td><td>Ownership docs rated hardest (24.2%)</td></tr>
+            <tr><td>C6</td><td>Flag curative items for agency (do not execute)</td><td>Curative checklist</td><td>60% of transactions clear 3–5 issues pre-close</td></tr>
+            <tr><td>C7</td><td>Commercial-specific: UCC fixture filings, survey/ALTA coordination flags, leasehold review</td><td>Commercial addendum</td><td>ALTA survey encroachment table (2026 Table A Item 20)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Stage D — Commitment Drafting <span class="verdict-pass">BUREAU</span></h3>
+        <table>
+          <thead><tr><th>Step</th><th>Schedule</th><th>Content</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>D1</td><td><strong>Schedule A</strong></td><td>Effective date, proposed insureds, policy amounts, current vesting</td><td>Commercial: multiple proposed insureds / loan amounts possible</td></tr>
+            <tr><td>D2</td><td><strong>Schedule B-I</strong></td><td>Requirements — deeds, mortgages, payoff satisfactions, affidavits, estoppels</td><td>Reader sets requirements from vesting deed + search findings</td></tr>
+            <tr><td>D3</td><td><strong>Schedule B-II</strong></td><td>Exceptions — easements, CCRs, taxes, standard + special exceptions</td><td>Buyer/lender negotiates removal before closing</td></tr>
+            <tr><td>D4</td><td><strong>Schedule C</strong></td><td>Legal description(s) — one per parcel on commercial</td><td>SoftPro commercial: unlimited parcels per order</td></tr>
+            <tr><td>D5</td><td><strong>Supporting docs</strong></td><td>Abstract, run sheet, source document index, audit trail</td><td>Every AI output traceable to source — underwriter requirement</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Stage E — Agency Review &amp; Underwriter (Agency + Underwriter)</h3>
+        <table>
+          <thead><tr><th>Step</th><th>Task</th><th>Actor</th><th>Why agency stays in loop</th></tr></thead>
+          <tbody>
+            <tr><td>E1</td><td>Agency senior examiner reviews bureau draft against source docs</td><td>Licensed agency examiner</td><td>E&amp;O liability; underwriter expects agency sign-off</td></tr>
+            <tr><td>E2</td><td>Revise requirements/exceptions; import approved commitment into SoftPro</td><td>Agency examiner</td><td>Human-in-the-loop — same model as Zaito</td></tr>
+            <tr><td>E3</td><td>Submit to underwriter for approval, CPL, policy jacket</td><td>Agency → underwriter</td><td>Underwriter acceptance = open validation (Phase 6)</td></tr>
+            <tr><td>E4</td><td>Distribute commitment to lender, buyer counsel, seller</td><td>Agency</td><td>Triggers curative clock</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Stage F — Post-Commitment (Agency — out of MVP)</h3>
+        <table>
+          <thead><tr><th>Step</th><th>Task</th><th>ALTA reference</th></tr></thead>
+          <tbody>
+            <tr><td>F1</td><td>Curative — obtain releases, probate docs, corrective instruments</td><td>Segment 2; 62% perform 4+ curative actions per file</td></tr>
+            <tr><td>F2</td><td>Pre-closing updates — refresh search ≤1 business day before close</td><td>ALTA flowchart Step 5 / C-4</td></tr>
+            <tr><td>F3</td><td>Closing coordination, settlement statements, signing, funding</td><td>Segment 3; SoftPro commercial master settlement</td></tr>
+            <tr><td>F4</td><td>Recording, policy issuance, post-close package</td><td>Segment 4</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p1-commercial">
+        <h2>1.4 Commercial vs Residential — Workflow Delta</h2>
+        <p>Commercial is not “residential with more documents.” SoftPro built separate commercial functionality after a year of operator interviews. These deltas drive why Zaito’s residential pilot does not cover our wedge.</p>
+
+        <table>
+          <thead><tr><th>Dimension</th><th>Residential standard</th><th>Commercial complex</th><th>Impact on bureau</th></tr></thead>
+          <tbody>
+            <tr><td>Parcels per order</td><td>1</td><td>Unlimited (e.g., 50-parcel wind farm)</td><td>Parallel search + exam per parcel; master exception handling</td></tr>
+            <tr><td>Parties</td><td>1 buyer, 1 seller</td><td>Multiple buyers, sellers, charge-line assignments</td><td>Entity/authority verification multiplied</td></tr>
+            <tr><td>Settlement</td><td>HUD/CD regulated forms</td><td>Custom master + per-party statements</td><td>Out of bureau scope — but commitment must support it</td></tr>
+            <tr><td>Vesting</td><td>Individuals, simple trusts</td><td>LLCs, partnerships, REITs, trusts with multiple beneficiaries</td><td>Name search scope expands significantly</td></tr>
+            <tr><td>Encumbrances</td><td>Standard mortgage + HOA</td><td>Easements, CCRs, leases, UCC fixtures, environmental</td><td>B-II exception list longer; exam depth higher</td></tr>
+            <tr><td>Survey</td><td>Optional / lender-dependent</td><td>ALTA/NSPS survey often required; encroachment table</td><td>Bureau flags survey dependencies; does not perform survey</td></tr>
+            <tr><td>Underwriters</td><td>Usually one</td><td>Multiple underwriters possible on single deal</td><td>Agency coordinates; bureau follows primary underwriter guidelines</td></tr>
+            <tr><td>TAT benchmark</td><td>4 hrs – 5 days (digitized county)</td><td>Days to weeks; portfolio deals run parallel</td><td>Bureau SLA must be explicit per file type</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p1-softpro">
+        <h2>1.5 SoftPro Touchpoints</h2>
+        <p>Where the managed bureau connects to agency systems — integration detail expands in Phase 5.</p>
+
+        <table>
+          <thead><tr><th>Touchpoint</th><th>SoftPro feature</th><th>Bureau interaction</th></tr></thead>
+          <tbody>
+            <tr><td>Order opening</td><td>SoftPro Select — commercial order type</td><td>Agency creates order; exports spec to bureau</td></tr>
+            <tr><td>Multi-parcel setup</td><td>Commercial — unlimited parcels, charge lines</td><td>Bureau receives parcel list with legal descriptions</td></tr>
+            <tr><td>Search ordering</td><td>SoftPro 360 → DataTrace TPS, Pippin Title, MaestroX</td><td>Bureau may order via agency credentials or receive plant data</td></tr>
+            <tr><td>Tax data</td><td>SoftPro 360 → DataTrace TaxSource</td><td>Auto-import tax status into file — reduces re-key</td></tr>
+            <tr><td>Task milestones</td><td>Automation — tasks on commitment publish, status changes</td><td>Bureau delivery triggers “commitment ready for review” task</td></tr>
+            <tr><td>Document return</td><td>SoftPro 360 electronic transfer back to file</td><td>Commitment PDF + structured data import target</td></tr>
+            <tr><td>Underwriter</td><td>SoftPro 360 → underwriter integrations (Essent, etc.)</td><td>Agency submits post-approval; bureau does not access</td></tr>
+            <tr><td>Reporting</td><td>Turn-time from file receipt to commitment</td><td>Primary KPI agencies track — bureau must improve this</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+    participant Agency as Agency SoftPro
+    participant S360 as SoftPro 360
+    participant DT as DataTrace / Plants
+    participant Bureau as Managed Bureau
+    participant Exam as Agency Examiner
+
+    Agency->>Agency: Open commercial order
+    Agency->>Bureau: File package (parcels, parties, guidelines)
+    Bureau->>S360: Order searches (via agency or direct)
+    S360->>DT: TPS / TaxSource request
+    DT-->>S360: Records + tax data
+    S360-->>Agency: Auto-import to file
+    Bureau->>Bureau: Abstract, examine, draft commitment
+    Bureau-->>Exam: Commitment-ready package + audit trail
+    Exam->>Exam: Review, revise, approve
+    Exam->>Agency: Import approved commitment to SoftPro
+    Agency->>S360: Submit to underwriter
+          </pre>
+        </div>
+      </section>
+
+      <section id="p1-mvp-boundary">
+        <h2>1.6 MVP Boundary — What We Deliver</h2>
+        <p>Phase 1 defines the unit of work the agency pays for. Matches Phase 0 locked model: managed bureau, not augmentation software.</p>
+
+        <table>
+          <thead><tr><th></th><th>In MVP deliverable</th><th>Out of MVP</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Input</strong></td><td>Order spec from agency: parcels, parties, lender/underwriter guidelines, effective date</td><td>Agency does not give bureau SoftPro login in v1 (package-based handoff)</td></tr>
+            <tr><td><strong>Process</strong></td><td>Search, abstract, examine, draft Schedules A/B-I/B-II/C</td><td>Curative execution, payoff ordering, recording</td></tr>
+            <tr><td><strong>Output</strong></td><td>Commitment-ready draft + abstract + audit trail + curative flag list</td><td>Final underwriter-approved commitment, CPL, policies</td></tr>
+            <tr><td><strong>Approval</strong></td><td>Agency examiner reviews and approves before use</td><td>Bureau does not sign as title agent</td></tr>
+            <tr><td><strong>Integration</strong></td><td>Structured output importable to SoftPro (Phase 5 spec)</td><td>Deep TPS write-back in v1 optional</td></tr>
+          </tbody>
+        </table>
+
+        <blockquote class="locked">
+          <strong>Smallest paid unit (preview for Phase 4):</strong> One commercial complex file, one primary parcel + up to N associated parcels, from bureau intake to examiner-approved commitment draft. Outcome-priced per file. Revisions loop included; curative execution billed separately or not offered.
+        </blockquote>
+      </section>
+
+      <section id="p1-hours">
+        <h2>1.7 Hours, Bottlenecks &amp; Bureau Opportunity</h2>
+        <p>Empirical totals from ALTA. Bureau-addressable hours are <em>estimated</em> by subtracting closing-segment hours and allocating curative to agency — triangulated, not directly surveyed.</p>
+
+        <table>
+          <thead><tr><th>Metric</th><th>Standard file</th><th>Difficult / complex file</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td>Total staff hours (all segments)</td><td><strong>22 hrs</strong></td><td><strong>45 hrs</strong></td><td>ALTA 2024 / 2026</td></tr>
+            <tr><td>Share of files</td><td>64%</td><td>36%</td><td>ALTA 2024</td></tr>
+            <tr><td>Closing segment hours</td><td>~14.8 hrs</td><td>~28.6 hrs</td><td>ALTA 2026 summary chart</td></tr>
+            <tr><td>Pre-closing hours (derived)</td><td>~7.2 hrs</td><td>~16.4 hrs</td><td>Total − closing segment</td></tr>
+            <tr><td>Bureau-addressable (est.)</td><td>~5–7 hrs</td><td><strong>10–18 hrs</strong></td><td>Search + exam + draft; excludes curative execution</td></tr>
+            <tr><td>Agency examiner review (est.)</td><td>1–2 hrs</td><td>2–4 hrs</td><td>Industry norm; Phase 6 to validate</td></tr>
+            <tr><td>Fully loaded labor cost</td><td>~$1,547</td><td><strong>~$3,165</strong></td><td>45 hrs × $70.33 FinCEN wage</td></tr>
+            <tr><td>Target bureau price</td><td>—</td><td><strong>$100–300</strong></td><td>Market research hypothesis</td></tr>
+          </tbody>
+        </table>
+
+        <div class="chart-card">
+          <h4>Difficult File — Estimated Hour Allocation</h4>
+          <div class="chart-wrap">
+            <canvas id="chartHourAlloc"></canvas>
+          </div>
+          <p style="font-size:0.78rem;margin-top:0.5rem;">45-hr difficult file split: bureau + examiner review are estimates; remainder is agency-owned curative, closing (ALTA Segment 3 ≈ 28.6 hrs includes “clearing title”), and policy issuance.</p>
+        </div>
+
+        <h3>Top bottlenecks (bureau must address)</h3>
+        <table>
+          <thead><tr><th>#</th><th>Bottleneck</th><th>Evidence</th><th>Bureau response</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Document volume on complex chains</td><td>21% of files have 50+ records</td><td>AI abstract + chain assembly</td></tr>
+            <tr><td>2</td><td>Ownership / mortgage doc analysis</td><td>24.2% rate as hardest documents</td><td>Examiner-grade risk flags (Zaito model)</td></tr>
+            <tr><td>3</td><td>Probate / estate gaps</td><td>44% beyond standard underwriting</td><td>Probate chain specialist workflow</td></tr>
+            <tr><td>4</td><td>Multi-parcel commercial coordination</td><td>SoftPro: 50-parcel deals exist</td><td>Parallel processing + master schedule</td></tr>
+            <tr><td>5</td><td>Manual county retrieval</td><td>27% still obtain docs in person</td><td>Ground searcher network or agency-provided docs</td></tr>
+            <tr><td>6</td><td>Underwriter audit trail</td><td>E&amp;O + underwriter acceptance risk</td><td>Full source-to-output provenance log</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Phase 1 conclusions → inputs for Phase 2–4</h3>
+        <ul class="checklist">
+          <li class="done">Workflow mapped across 6 stages (A–F); bureau scope = B + C + D</li>
+          <li class="done">Commercial delta documented — not a scaled-up residential file</li>
+          <li class="done">SoftPro touchpoints identified for Phase 5 integration map</li>
+          <li class="done">MVP deliverable = commitment-ready draft with audit trail, agency-approved</li>
+          <li class="done">10–18 hr bureau opportunity on complex files supports $100–300 price vs $3,165 labor</li>
+        </ul>
+      </section>
+
+      <!-- PHASE 2 -->
+      <section id="phase2">
+        <h2>Phase 2 — Competitor Teardown <span class="phase-badge">Complete</span></h2>
+        <p>Desk research on six competitor categories mapped to Phase 1 Stages B–D (search → examination → commitment draft). Qualia Clear included as contrast only — not addressable ICP.</p>
+
+        <blockquote class="final-spec">
+          <strong>Key finding:</strong> No public player delivers <em>AI-native managed commercial examination bureau</em> to SoftPro agencies at outcome pricing. Zaito is closest on AI but sells augmentation (residential pilot). HitechDigital is closest on bureau delivery but is manual offshore labor. TitleTrackr is search/abstract tooling. The gap we locked in Phase 0 is real in public positioning — not whitespace in capability, but whitespace in <em>commercial + bureau + SoftPro-native delivery</em>.
+        </blockquote>
+      </section>
+
+      <section id="p2-landscape">
+        <h2>2.1 Competitive Landscape — Four Lanes</h2>
+
+        <table>
+          <thead><tr><th>Lane</th><th>Players</th><th>Model</th><th>Threat to our wedge</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>A — AI augmentation</strong></td>
+              <td>Zaito, RezeLink/Titl (emerging)</td>
+              <td>Software assists in-house examiners; copy-paste into TPS</td>
+              <td class="verdict-warn">High on residential/complex AI; low on commercial bureau</td>
+            </tr>
+            <tr>
+              <td><strong>B — Managed bureau / LPO</strong></td>
+              <td>HitechDigital, Hitech BPO, HabileData, HDEP, eNoah</td>
+              <td>Human offshore team delivers search → commitment package</td>
+              <td class="verdict-warn">Medium — same deliverable, slower/cheaper on simple</td>
+            </tr>
+            <tr>
+              <td><strong>C — Search / abstract tools</strong></td>
+              <td>TitleTrackr, DataTrace TPS, Pippin Title, Neuskale</td>
+              <td>Partial workflow — search, abstract, or plant data only</td>
+              <td class="verdict-pass">Low — agency still staffs examination</td>
+            </tr>
+            <tr>
+              <td><strong>D — TPS-native AI (Qualia only)</strong></td>
+              <td>Qualia Clear 2.0</td>
+              <td>Agentic AI inside Qualia stack; curative + closing included</td>
+              <td class="verdict-pass">Zero for SoftPro ICP — contrast only</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+quadrantChart
+    title Competitor Positioning
+    x-axis Partial deliverable --> Full bureau deliverable
+    y-axis Manual labor --> AI-native
+    quadrant-1 AI Bureau
+    quadrant-2 AI Augmentation
+    quadrant-3 Search tools
+    quadrant-4 Manual Bureau
+    OurWedge: [0.88, 0.82]
+    HitechDigital: [0.85, 0.35]
+    Zaito: [0.45, 0.78]
+    TitleTrackr: [0.35, 0.72]
+    Pippin: [0.25, 0.40]
+    QualiaClear: [0.92, 0.88]
+          </pre>
+        </div>
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem;">Q1 (top-right) = full bureau + AI-native — our target quadrant. QualiaClear shown for contrast; not addressable SoftPro ICP. Point labels without spaces required by Mermaid parser.</p>
+      </section>
+
+      <section id="p2-matrix">
+        <h2>2.2 Feature Matrix — Stages B, C, D</h2>
+        <p>Scored from public product pages, ALTA marketplace listings, and vendor documentation. ✓ = yes/public · ◐ = partial · ✗ = no/not offered · ? = unknown/unverified.</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Our wedge (target)</th>
+              <th>Zaito</th>
+              <th>HitechDigital</th>
+              <th>TitleTrackr</th>
+              <th>Pippin Title</th>
+              <th>Qualia Clear 2.0</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7"><strong>Stage B — Search &amp; retrieval</strong></td></tr>
+            <tr><td>Multi-parcel commercial search</td><td class="verdict-pass">✓</td><td>◐</td><td>✓</td><td>◐</td><td>✓</td><td>✓</td></tr>
+            <tr><td>SoftPro 360 native order</td><td>◐ v1 package</td><td>✓</td><td>◐ client OMS</td><td>✗</td><td>✓</td><td>✗ Qualia only</td></tr>
+            <tr><td>DataTrace / title plant integration</td><td>✓</td><td>✓</td><td>✓</td><td>◐ county agents</td><td>✓</td><td>✓</td></tr>
+            <tr><td>Autonomous county retrieval (AI agents)</td><td>✓</td><td>?</td><td>✗ manual</td><td>✓ Search Agents</td><td>◐ AI assist</td><td>✓</td></tr>
+            <tr><td>Entity / judgment / probate search</td><td>✓</td><td>✓ probate</td><td>✓</td><td>◐</td><td>✓</td><td>✓</td></tr>
+            <tr><td colspan="7"><strong>Stage C — Examination</strong></td></tr>
+            <tr><td>Chain-of-title analysis</td><td>✓</td><td>✓</td><td>✓ human</td><td>◐ abstract only</td><td>◐</td><td>✓</td></tr>
+            <tr><td>Examiner-grade risk flags + reasons</td><td>✓</td><td>✓</td><td>✓ human</td><td>◐</td><td>✗</td><td>✓</td></tr>
+            <tr><td>Targeted Q&amp;A on source docs</td><td>✓</td><td>✓</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td></tr>
+            <tr><td>Commercial-specific (UCC, leases, survey flags)</td><td>✓</td><td>◐</td><td>✓</td><td>◐</td><td>✓ commercial team</td><td>✓</td></tr>
+            <tr><td>Curative flag list (no execution)</td><td>✓</td><td>✓</td><td>✓</td><td>◐</td><td>◐</td><td>✓ executes curative</td></tr>
+            <tr><td colspan="7"><strong>Stage D — Commitment drafting</strong></td></tr>
+            <tr><td>Full Schedule A draft</td><td>✓</td><td>◐ report feeds</td><td>✓</td><td>✓ AI extract</td><td>✗</td><td>✓</td></tr>
+            <tr><td>Schedule B-I requirements draft</td><td>✓</td><td>◐</td><td>✓</td><td>✓</td><td>✗</td><td>✓</td></tr>
+            <tr><td>Schedule B-II exceptions draft</td><td>✓</td><td>◐ CCR focus</td><td>✓</td><td>✓</td><td>✗</td><td>✓</td></tr>
+            <tr><td>Schedule C multi-parcel legal</td><td>✓</td><td>◐</td><td>✓</td><td>◐</td><td>✗</td><td>✓</td></tr>
+            <tr><td>Underwriter template compliance</td><td>✓</td><td>?</td><td>✓ per client</td><td>✓ custom format</td><td>✗</td><td>✓</td></tr>
+            <tr><td colspan="7"><strong>Delivery model</strong></td></tr>
+            <tr><td>Managed bureau (outsourced deliverable)</td><td class="verdict-pass"><strong>✓</strong></td><td>✗ augmentation</td><td>✓</td><td>✗ tool</td><td>◐ search only</td><td>◐ in-house AI</td></tr>
+            <tr><td>Human-in-loop at agency examiner</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+            <tr><td>Source-to-output audit trail</td><td>✓</td><td>✓</td><td>◐ QC process</td><td>✓ hyperlinks</td><td>◐</td><td>✓</td></tr>
+            <tr><td>Commercial complex focus (public)</td><td class="verdict-pass"><strong>✓</strong></td><td>✗ residential pilot</td><td>✓</td><td>◐</td><td>✓</td><td>✓</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p2-pricing">
+        <h2>2.3 Pricing Intelligence</h2>
+        <p>Almost no competitor publishes commercial complex-file pricing. Ranges triangulated from public rate cards (simple residential), vendor claims, and market research hypothesis.</p>
+
+        <table>
+          <thead><tr><th>Provider</th><th>Pricing model</th><th>Published numbers</th><th>Est. complex commercial</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Our target</strong></td>
+              <td>Outcome per complex file</td>
+              <td>—</td>
+              <td class="verdict-pass"><strong>$100–300</strong> (hypothesis)</td>
+              <td>vs ~$3,165 in-house labor (45 hrs × $70.33)</td>
+            </tr>
+            <tr>
+              <td><strong>Zaito</strong></td>
+              <td>Outcome-based / per-order</td>
+              <td>Not public; 40–60% back-office savings claim</td>
+              <td>?</td>
+              <td>30-day residential pilot; demo-only pricing</td>
+            </tr>
+            <tr>
+              <td><strong>HitechDigital / BPO</strong></td>
+              <td>Per-file or per-service; volume tiers</td>
+              <td>Custom quote in 24 hrs</td>
+              <td>$75–250+ (est.)</td>
+              <td>40–60% vs in-house claim; modular services</td>
+            </tr>
+            <tr>
+              <td><strong>HabileData</strong></td>
+              <td>Per-search; dedicated team</td>
+              <td>60–70% vs in-house</td>
+              <td>$50–150+ (est.)</td>
+              <td>AI-assisted + manual; scales 50–2,000 searches/day</td>
+            </tr>
+            <tr>
+              <td><strong>Neuskale</strong></td>
+              <td>Per search type</td>
+              <td>$10–35 residential searches; exam = contact us</td>
+              <td>Quote</td>
+              <td>Price floor anchor for simple files only</td>
+            </tr>
+            <tr>
+              <td><strong>Offshore labor (India/PH)</strong></td>
+              <td>Hourly or per-file</td>
+              <td>$6–40/hr BPO benchmarks</td>
+              <td>$40–200+ (est.)</td>
+              <td>Insignia 2026 outsourcing rate survey</td>
+            </tr>
+            <tr>
+              <td><strong>TitleTrackr</strong></td>
+              <td>Month-to-month SaaS</td>
+              <td>~$500 implementation cited; no per-file public rate</td>
+              <td>Seat/tool cost</td>
+              <td>ROI via staff efficiency, not per-file bureau</td>
+            </tr>
+            <tr>
+              <td><strong>Pippin Title</strong></td>
+              <td>Per search; complexity-based</td>
+              <td>Not public; commercial &gt; residential</td>
+              <td>$100–500+ (est.)</td>
+              <td>Search deliverable only; ~7-day commercial TAT (VA)</td>
+            </tr>
+            <tr>
+              <td><strong>Qualia Clear 2.0</strong></td>
+              <td>Bundled with Qualia Core</td>
+              <td>Qualia ~$3,599/yr+ (third-party listing); Clear = contact</td>
+              <td>N/A</td>
+              <td>50% hours-to-close claim; SoftPro ICP excluded</td>
+            </tr>
+            <tr>
+              <td><strong>HDEP International</strong></td>
+              <td>Per-file bureau</td>
+              <td>Up to 50% cost reduction claim (ALTA marketplace)</td>
+              <td>Quote</td>
+              <td>Legacy bureau; commitment prep included</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Price Position — Complex File (estimated ranges)</h4>
+            <div class="chart-wrap">
+              <canvas id="chartPricing"></canvas>
+            </div>
+            <p style="font-size:0.78rem;margin-top:0.5rem;">Bars show estimated price ranges where published data absent. In-house labor cost ($3,165) shown for reference — not a competitor price.</p>
+          </div>
+          <div class="chart-card">
+            <h4>Deliverable Depth vs Price</h4>
+            <table>
+              <thead><tr><th>Provider</th><th>Delivers to commitment draft?</th><th>Agency still needs examiner?</th></tr></thead>
+              <tbody>
+                <tr><td>In-house</td><td>Yes</td><td>Yes (full 45 hrs)</td></tr>
+                <tr><td>HitechDigital bureau</td><td>Yes</td><td>Yes (review only)</td></tr>
+                <tr><td>Zaito</td><td>Partial — AI draft assists</td><td>Yes (heavy exam still)</td></tr>
+                <tr><td>TitleTrackr</td><td>Partial — abstract/commitment assist</td><td>Yes (exam + approval)</td></tr>
+                <tr><td>Pippin / Neuskale</td><td>No — search package</td><td>Yes (exam + draft)</td></tr>
+                <tr><td><strong>Our target</strong></td><td class="verdict-pass"><strong>Yes — full draft</strong></td><td>Yes (approval only, 2–4 hrs)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="p2-profiles">
+        <h2>2.4 Player Profiles</h2>
+
+        <h3>Zaito — Direct competitor (Lane A)</h3>
+        <table>
+          <thead><tr><th>Dimension</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>Product</td><td>Zai-XM — AI augmentation for in-house examiners/searchers</td></tr>
+            <tr><td>Positioning</td><td>“Instead of sending complex files to expensive outsourcing” — explicitly targets offshore replacement</td></tr>
+            <tr><td>Strengths</td><td>Probate, CCRs, metes &amp; bounds, risk flags with reasons, audit trail, SoftPro/Resware, outcome pricing, $0 VC = slow but learning</td></tr>
+            <tr><td>Weaknesses</td><td>Residential purchase pilot only; augmentation not bureau; no public commercial focus; no named logos; examiner still does heavy lift</td></tr>
+            <tr><td>Gap we exploit</td><td class="verdict-pass">Commercial managed bureau — agency outsources overflow, doesn’t buy examiner software</td></tr>
+          </tbody>
+        </table>
+
+        <h3>HitechDigital — Closest bureau analog (Lane B)</h3>
+        <table>
+          <thead><tr><th>Dimension</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>Product</td><td>Modular managed title production — search → typing → exam → commitment package</td></tr>
+            <tr><td>Positioning</td><td>“Extended production team” — identical deliverable shape to our MVP</td></tr>
+            <tr><td>Strengths</td><td>Full commitment-ready package, underwriter template compliance, 38 states, 24×7, Hitech i2i AI assist on retrieval</td></tr>
+            <tr><td>Weaknesses</td><td>Manual offshore labor core; custom quote sales cycle; no public AI audit trail; not SoftPro-native brand</td></tr>
+            <tr><td>Gap we exploit</td><td class="verdict-pass">AI-native speed + audit trail at outcome price — beat on TAT and examiner trust, not hourly labor</td></tr>
+          </tbody>
+        </table>
+
+        <h3>TitleTrackr — Tool competitor (Lane C)</h3>
+        <table>
+          <thead><tr><th>Dimension</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>Product</td><td>AI abstract tool, Search Agents, commitment report extraction — anti-Qualia positioning</td></tr>
+            <tr><td>Strengths</td><td>90% faster abstract claims; custom county Search Agents; Schedule A/B XML export; month-to-month; built by title pros</td></tr>
+            <tr><td>Weaknesses</td><td>Agency still runs production; not managed service; no commercial bureau SLA; TPS integration limited</td></tr>
+            <tr><td>Gap we exploit</td><td>Agencies that want to outsource, not buy another tool for overloaded examiners</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Qualia Clear 2.0 — Contrast (Lane D)</h3>
+        <table>
+          <thead><tr><th>Dimension</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>Product</td><td>Agentic AI inside Qualia — inbox, curative agents, QA, 50% hours-to-close claim, 80% automation target</td></tr>
+            <tr><td>Relevance</td><td>Sets buyer expectations for AI in title; irrelevant to SoftPro ICP unless they migrate</td></tr>
+            <tr><td>Implication</td><td>SoftPro agencies feel competitive pressure but cannot access Clear — creates demand for “Clear-like” bureau on their stack</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Also tracked</h3>
+        <ul class="constraints">
+          <li><strong>RezeLink (Titl × Rezervology):</strong> SoftPro-native search automation — pre-examination data structuring only; May 2026 public release. Lane A/C hybrid. Monitor.</li>
+          <li><strong>Pippin Title:</strong> SoftPro 360 search vendor with commercial team; search deliverable, not commitment bureau.</li>
+          <li><strong>DataTrace TPS:</strong> Infrastructure — agencies already use via SoftPro 360; we consume, don’t compete.</li>
+        </ul>
+      </section>
+
+      <section id="p2-gaps">
+        <h2>2.5 Gap Analysis &amp; Strategic Implications</h2>
+
+        <table>
+          <thead><tr><th>Gap</th><th>Evidence</th><th>Our response (Phase 3–4)</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>No AI bureau for commercial on SoftPro</strong></td>
+              <td>Zaito = augmentation + residential; Hitech = manual bureau; TitleTrackr = tool</td>
+              <td>Position as “managed Clear for SoftPro agencies”</td>
+            </tr>
+            <tr>
+              <td><strong>Underwriter audit trail is table stakes</strong></td>
+              <td>Zaito + TitleTrackr both lead with provenance; Zaito blog: “give reasons not scores”</td>
+              <td>Clause-level citations mandatory in MVP</td>
+            </tr>
+            <tr>
+              <td><strong>Price anchoring on simple files</strong></td>
+              <td>Neuskale $10–25; offshore $75–200 simple residential</td>
+              <td>Never compete on simple — commercial complex only</td>
+            </tr>
+            <tr>
+              <td><strong>Bureau vs software buyer</strong></td>
+              <td>Agencies already send overflow offshore (Zaito’s own positioning)</td>
+              <td>Sell to ops/title mgr budget, not IT/software budget</td>
+            </tr>
+            <tr>
+              <td><strong>Revision loop undefined publicly</strong></td>
+              <td>No competitor publishes revision SLA or acceptance criteria</td>
+              <td>Define in Phase 3 blueprint — competitive differentiator</td>
+            </tr>
+            <tr>
+              <td><strong>Multi-parcel commercial pricing</strong></td>
+              <td>All vendors quote custom; no per-parcel public model</td>
+              <td>Phase 4: primary parcel + N associated parcels pricing tier</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="chart-card">
+          <h4>Competitive Moat Stack (Phase 2 synthesis)</h4>
+          <div class="chart-wrap">
+            <canvas id="chartMoat"></canvas>
+          </div>
+        </div>
+
+        <h3>Phase 2 conclusions → inputs for Phase 3–4</h3>
+        <ul class="checklist">
+          <li class="done">Four competitive lanes mapped; our quadrant = AI + full bureau deliverable</li>
+          <li class="done">Zaito is augmentation on residential; HitechDigital is manual bureau — neither owns our lane publicly</li>
+          <li class="done">$100–300/file hypothesis sits below in-house labor ($3,165) and above simple-file offshore ($10–75)</li>
+          <li class="done">Audit trail with clause-level reasons is non-negotiable — match Zaito bar, beat LPO</li>
+          <li class="done">Qualia Clear sets UX expectation; SoftPro agencies are underserved — “Clear-like bureau” is viable positioning</li>
+          <li class="done">RezeLink/Titl emerging on SoftPro search — monitor; potential data-layer partner not bureau competitor</li>
+        </ul>
+      </section>
+
+      <!-- PHASE 3 -->
+      <section id="phase3">
+        <h2>Phase 3 — Service Blueprint <span class="phase-badge">Complete</span></h2>
+        <p>Operating model for the managed commercial examination bureau — roles, deliverables, SLAs, audit trail, E&amp;O framework, and underwriter acceptance path. Synthesized from Phase 1 workflow, Phase 2 gaps, NAIC/ALTA regulatory requirements, agency contract patterns, and bureau SLA benchmarks.</p>
+
+        <blockquote class="final-spec">
+          <strong>Operating principle:</strong> We are a <em>vendor to the agency</em>, never the insured party. The agency examiner is the licensed professional of record. Our job is to deliver a commitment-ready draft with clause-level provenance so the examiner can approve in 2–4 hours — not to replace their judgment or underwriter relationship.
+        </blockquote>
+      </section>
+
+      <section id="p3-model">
+        <h2>3.1 Operating Model</h2>
+        <p>Three-layer model: AI production engine → bureau QA → agency approval gate. Mirrors proven offshore bureau shape (HitechDigital, Indecomm) but with AI speed and Zaito-grade audit trail.</p>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart LR
+    subgraph intake [Intake]
+        I1[Agency order package]
+    end
+    subgraph bureau [Bureau Production]
+        P1[AI search + abstract]
+        P2[AI examination + flags]
+        P3[Commitment draft]
+        P4[Bureau QA review]
+    end
+    subgraph approval [Agency Gate]
+        A1[Examiner review]
+        A2[Approve / revise]
+        A3[Import to SoftPro]
+    end
+    subgraph downstream [Agency-owned]
+        D1[Underwriter submit]
+        D2[Curative + closing]
+    end
+    I1 --> P1 --> P2 --> P3 --> P4
+    P4 -->|Deliverable package| A1 --> A2 --> A3 --> D1 --> D2
+    A2 -->|Revision request| P3
+    style P1 fill:#1a2332,stroke:#3b82f6,color:#e8edf4
+    style P2 fill:#1a2332,stroke:#3b82f6,color:#e8edf4
+    style P3 fill:#1a2332,stroke:#3b82f6,color:#e8edf4
+    style P4 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style A1 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style A2 fill:#064e3b,stroke:#10b981,color:#e8edf4
+          </pre>
+        </div>
+
+        <table>
+          <thead><tr><th>Layer</th><th>Who</th><th>Accountability</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Production</strong></td><td>AI agents + bureau staff</td><td>Deliverable accuracy, TAT, audit trail completeness</td></tr>
+            <tr><td><strong>Bureau QA</strong></td><td>Senior bureau reviewer (human)</td><td>Pre-delivery checklist; catch errors before agency sees file</td></tr>
+            <tr><td><strong>Agency approval</strong></td><td>Licensed agency examiner</td><td>Final sign-off; E&amp;O liability attaches here</td></tr>
+            <tr><td><strong>Underwriter</strong></td><td>Agency → underwriter</td><td>Policy issuance; bureau not in chain</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p3-raci">
+        <h2>3.2 Roles &amp; RACI</h2>
+        <p>R = Responsible · A = Accountable · C = Consulted · I = Informed</p>
+
+        <table>
+          <thead><tr><th>Activity</th><th>Agency ops</th><th>Agency examiner</th><th>Bureau AI</th><th>Bureau QA</th><th>Underwriter</th></tr></thead>
+          <tbody>
+            <tr><td>Open commercial order in SoftPro</td><td><strong>A/R</strong></td><td>I</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Package file spec + guidelines</td><td><strong>A/R</strong></td><td>C</td><td>I</td><td>—</td><td>—</td></tr>
+            <tr><td>Search &amp; retrieve records</td><td>C</td><td>I</td><td><strong>R</strong></td><td>I</td><td>—</td></tr>
+            <tr><td>Examine chain + flag issues</td><td>I</td><td>C</td><td><strong>R</strong></td><td>C</td><td>—</td></tr>
+            <tr><td>Draft Schedules A / B-I / B-II / C</td><td>I</td><td>C</td><td><strong>R</strong></td><td>C</td><td>—</td></tr>
+            <tr><td>Bureau QA pre-delivery check</td><td>—</td><td>—</td><td>I</td><td><strong>A/R</strong></td><td>—</td></tr>
+            <tr><td>Review draft vs source docs</td><td>I</td><td><strong>A/R</strong></td><td>C</td><td>I</td><td>—</td></tr>
+            <tr><td>Approve commitment for use</td><td>I</td><td><strong>A/R</strong></td><td>—</td><td>—</td><td>I</td></tr>
+            <tr><td>Submit to underwriter</td><td><strong>A/R</strong></td><td>R</td><td>—</td><td>—</td><td>C</td></tr>
+            <tr><td>Execute curative</td><td><strong>A/R</strong></td><td>R</td><td>—</td><td>—</td><td>C</td></tr>
+            <tr><td>Issue policy</td><td>R</td><td>C</td><td>—</td><td>—</td><td><strong>A</strong></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Role definitions</h3>
+        <table>
+          <thead><tr><th>Role</th><th>Description</th><th>Must have</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Agency title manager</strong></td><td>Commercial buyer; sends overflow files; owns vendor relationship</td><td>Budget authority; underwriter guidelines on file</td></tr>
+            <tr><td><strong>Agency senior examiner</strong></td><td>Licensed professional who approves bureau output before use</td><td>State license; underwriter appointment; E&amp;O coverage</td></tr>
+            <tr><td><strong>Bureau account lead</strong></td><td>Single POC for agency; SLA tracking; escalation</td><td>Title production experience; commercial file familiarity</td></tr>
+            <tr><td><strong>Bureau QA reviewer</strong></td><td>Human check before delivery — not a substitute for agency examiner</td><td>Title exam background; underwriter template training</td></tr>
+            <tr><td><strong>AI production layer</strong></td><td>Search, abstract, examine, draft — all outputs are drafts until agency approves</td><td>Clause-level source linking; no autonomous issuance</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p3-deliverable">
+        <h2>3.3 Deliverable Package Spec</h2>
+        <p>What the agency receives per file — the billable unit. Structured for SoftPro import (Phase 5) and examiner review in one session.</p>
+
+        <table>
+          <thead><tr><th>#</th><th>Artifact</th><th>Format</th><th>Required content</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><strong>Commitment draft</strong></td><td>PDF + structured JSON/XML</td><td>Schedules A, B-I, B-II, C per agency underwriter template</td></tr>
+            <tr><td>2</td><td><strong>Abstract / run sheet</strong></td><td>PDF + spreadsheet</td><td>Chronological instrument list with grantor, grantee, date, book/page, key notes</td></tr>
+            <tr><td>3</td><td><strong>Chain-of-title chart</strong></td><td>PDF / visual</td><td>Per-parcel chain with gap flags highlighted</td></tr>
+            <tr><td>4</td><td><strong>Examination memo</strong></td><td>PDF</td><td>Vesting analysis, open liens, easement/CCR summary, commercial addendum flags</td></tr>
+            <tr><td>5</td><td><strong>Curative checklist</strong></td><td>Structured list</td><td>Items requiring agency action — not executed by bureau</td></tr>
+            <tr><td>6</td><td><strong>Audit trail export</strong></td><td>JSON + human-readable PDF</td><td>Every requirement/exception linked to source doc + page + clause</td></tr>
+            <tr><td>7</td><td><strong>Source document index</strong></td><td>PDF manifest</td><td>All retrieved docs referenced; links or attachments where permitted</td></tr>
+            <tr><td>8</td><td><strong>Delivery receipt</strong></td><td>System-generated</td><td>Timestamp, bureau QA sign-off, file version ID</td></tr>
+          </tbody>
+        </table>
+
+        <blockquote class="locked">
+          <strong>Acceptance definition:</strong> A deliverable is <em>accepted for examiner review</em> when all 8 artifacts pass bureau QA checklist. It is <em>approved for use</em> only when the agency examiner explicitly signs off in writing (email, SoftPro task close, or portal confirmation).
+        </blockquote>
+      </section>
+
+      <section id="p3-audit">
+        <h2>3.4 Audit Trail Requirements</h2>
+        <p>Non-negotiable — Phase 2 identified this as table stakes (Zaito bar). Zaito blog: “Don't give the examiner a confidence score. Give them a reason.” NAIC/ALTA trend: per-decision explainability for AI-assisted underwriting workflows.</p>
+
+        <h3>Every flagged item must include</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Example</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Source document ID</td><td>Deed Book 4521, Page 887</td><td>Examiner can verify in 30 seconds</td></tr>
+            <tr><td>Page + clause excerpt</td><td>Page 3, ¶2 — “subject to probate of estate…”</td><td>Reason, not score</td></tr>
+            <tr><td>Requirement or exception mapping</td><td>B-I Req #4 / B-II Ex #7</td><td>Links draft to source</td></tr>
+            <tr><td>AI vs human origin</td><td>AI-extracted, bureau QA verified</td><td>Transparency for underwriter exam</td></tr>
+            <tr><td>Retrieval timestamp</td><td>2026-06-22T14:30Z</td><td>Effective date / update window</td></tr>
+            <tr><td>Agency approver record</td><td>Jane Smith, examiner — 2026-06-23</td><td>E&amp;O chain of custody</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Prohibited outputs</h3>
+        <ul class="constraints">
+          <li>Confidence scores without cited source text</li>
+          <li>Requirements or exceptions with no linked document</li>
+          <li>Auto-submission to underwriter without agency examiner approval</li>
+          <li>Unsigned AI output presented as final commitment</li>
+        </ul>
+      </section>
+
+      <section id="p3-sla">
+        <h2>3.5 SLA Framework — Commercial Complex Files</h2>
+        <p>Benchmarked against Indecomm (24–48 hr standard), ntitle (48 hr), HabileData (4–24 hr simple), Pippin commercial (~7 days). Commercial complex files get longer SLAs — honesty beats overpromising.</p>
+
+        <table>
+          <thead><tr><th>Tier</th><th>File type</th><th>TAT (business days)</th><th>Clock starts</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><strong>T1</strong></td><td>Commercial purchase — single parcel, 11–30 docs</td><td>3 business days</td><td>Complete order package received</td><td>MVP launch tier</td></tr>
+            <tr><td><strong>T2</strong></td><td>Commercial — multi-parcel (2–5) or 30–50 docs</td><td>5 business days</td><td>Complete order package received</td><td>Parallel parcel processing</td></tr>
+            <tr><td><strong>T3</strong></td><td>Complex — 50+ docs, probate, or 6+ parcels</td><td>7–10 business days</td><td>Complete order package received</td><td>Matches Pippin commercial benchmark</td></tr>
+            <tr><td><strong>Rush</strong></td><td>Any tier + rush fee</td><td>50% TAT reduction</td><td>Confirmed rush acceptance</td><td>Phase 4 pricing add-on</td></tr>
+          </tbody>
+        </table>
+
+        <h3>SLA exclusions (clock pauses)</h3>
+        <ul class="constraints">
+          <li>Incomplete order package (missing legal descriptions, underwriter guidelines, entity names)</li>
+          <li>Manual county retrieval required and agency has not authorized ground search fee</li>
+          <li>Agency-requested hold or missing source docs agency was to provide</li>
+          <li>Force majeure / county system outage &gt;4 hours</li>
+        </ul>
+
+        <div class="chart-card">
+          <h4>SLA Tiers — Target Turnaround (business days)</h4>
+          <div class="chart-wrap">
+            <canvas id="chartSLA"></canvas>
+          </div>
+        </div>
+
+        <h3>SLA remedies (Phase 4 pricing input)</h3>
+        <table>
+          <thead><tr><th>Miss</th><th>Remedy</th><th>Rationale</th></tr></thead>
+          <tbody>
+            <tr><td>1–2 days late</td><td>10% fee credit</td><td>Pre-estimate of loss, not punitive (CIO SLA best practice)</td></tr>
+            <tr><td>3+ days late</td><td>25% fee credit + priority queue next file</td><td>Agency missed closing deadline risk</td></tr>
+            <tr><td>Material error found post-delivery</td><td>Free rework within 5 business days</td><td>HabileData model — builds trust</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p3-revisions">
+        <h2>3.6 Revision &amp; Acceptance Policy</h2>
+        <p>Phase 2 gap: no competitor publishes this. Publishing clear revision terms is a differentiator.</p>
+
+        <table>
+          <thead><tr><th>Scenario</th><th>Included in base fee?</th><th>TAT</th><th>Process</th></tr></thead>
+          <tbody>
+            <tr><td>Agency examiner requests changes to requirements/exceptions</td><td>Yes — 1 round</td><td>1 business day</td><td>Structured revision form citing schedule item #</td></tr>
+            <tr><td>Second revision round</td><td>Yes — MVP pilot only</td><td>1 business day</td><td>Revisit after Phase 6 validation</td></tr>
+            <tr><td>Updated search / datedown after delivery</td><td>No — separate order</td><td>Per T1–T3</td><td>ALTA pre-close update is agency-owned</td></tr>
+            <tr><td>Bureau material error (missed recorded lien)</td><td>Free rework</td><td>2 business days</td><td>Bureau QA failure — root cause logged</td></tr>
+            <tr><td>Underwriter rejects commitment</td><td>Agency handles</td><td>—</td><td>Bureau supports revision if in scope; agency owns underwriter relationship</td></tr>
+            <tr><td>New parcel added mid-file</td><td>Add-on per parcel</td><td>+2 days per parcel</td><td>Phase 4 pricing tier</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Examiner approval gate (required before use)</h3>
+        <ol class="constraints" style="list-style:decimal;">
+          <li>Examiner opens deliverable package within 2 business days of delivery</li>
+          <li>Examiner spot-checks ≥3 audit-trail links against source docs (min sample)</li>
+          <li>Examiner edits or approves each Schedule B-I requirement and B-II exception</li>
+          <li>Examiner records approval: name, date, file version ID in SoftPro task</li>
+          <li>Only then may agency submit to underwriter or distribute to lender</li>
+        </ol>
+      </section>
+
+      <section id="p3-eo">
+        <h2>3.7 E&amp;O &amp; Liability Framework</h2>
+        <p>Desk research summary — not legal advice. Agency contract pattern (Chicago Title agency agreement): agent liable for errors by employees, subcontractors, and independent contractors in abstracting/examination.</p>
+
+        <table>
+          <thead><tr><th>Party</th><th>Liability exposure</th><th>Mitigation</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Agency</strong></td><td>Primary — liable to underwriter for commitment/policy errors regardless of vendor (FL OIR, agency contracts)</td><td>Agency E&amp;O; examiner approval gate; vendor contract with indemnification</td></tr>
+            <tr><td><strong>Bureau (us)</strong></td><td>Contractual to agency — not to underwriter or consumer directly</td><td>Vendor E&amp;O insurance; SLA rework; limited liability cap in MSA</td></tr>
+            <tr><td><strong>Underwriter</strong></td><td>Policy risk after issuance</td><td>Not our chain — agency submits approved commitment</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Vendor contract requirements (MSA — Phase 6 template)</h3>
+        <ul class="checklist">
+          <li class="done">Written contract specifying division of responsibilities (NAIC Title Insurers Model Act §15)</li>
+          <li class="done">Bureau maintains E&amp;O coverage — minimum limits TBD with insurance broker</li>
+          <li class="done">Mutual NDA + data security addendum (SOC-2 Type 1 target — Zaito precedent)</li>
+          <li class="done">Indemnification: bureau liable for errors in bureau-produced draft attributable to bureau negligence</li>
+          <li class="done">Agency liable for: approval of draft, curative execution, closing, policy issuance</li>
+          <li class="done">Bureau never holds itself out as licensed title agent or authorized underwriter</li>
+          <li class="done">Right of examination: agency/underwriter may audit bureau files per agency agreement §10 pattern</li>
+        </ul>
+      </section>
+
+      <section id="p3-underwriter">
+        <h2>3.8 Underwriter Acceptance Path</h2>
+        <p>Underwriter never contracts with bureau directly. Path runs through agency examiner approval + underwriter's existing agency agreement.</p>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+    participant Bureau
+    participant Examiner as Agency Examiner
+    participant Agency as Agency Ops
+    participant UW as Underwriter
+
+    Bureau->>Examiner: Commitment-ready package + audit trail
+    Examiner->>Examiner: Review, edit, approve (2-4 hrs)
+    Examiner->>Agency: Approved commitment v1
+    Agency->>Agency: Import to SoftPro
+    Agency->>UW: Submit per underwriter portal / instructions
+    UW->>UW: Underwriter review (existing process)
+    alt UW accepts
+        UW->>Agency: Approved for closing
+    else UW revises requirements
+        UW->>Examiner: Revision notes
+        Examiner->>Bureau: Optional revision request (if in scope)
+    end
+          </pre>
+        </div>
+
+        <h3>What underwriters care about (from NAIC market conduct + agency contracts)</h3>
+        <table>
+          <thead><tr><th>Underwriter concern</th><th>Our response</th><th>Evidence artifact</th></tr></thead>
+          <tbody>
+            <tr><td>Work papers support commitment</td><td>Abstract + source index + audit trail</td><td>Artifacts #2, #6, #7</td></tr>
+            <tr><td>Agency exercised due diligence</td><td>Examiner approval record required</td><td>Artifact #8 + SoftPro task log</td></tr>
+            <tr><td>Guidelines consistently applied</td><td>Bureau trained on agency's underwriter template at onboarding</td><td>Onboarding checklist</td></tr>
+            <tr><td>Third-party / AI vendor oversight</td><td>Written MSA; bureau QA layer; explainable outputs</td><td>MSA + audit trail export</td></tr>
+            <tr><td>Examination on demand</td><td>Agency retains all bureau deliverables in file</td><td>SoftPro document store</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Underwriter acceptance — open validation (Phase 6)</h3>
+        <ul class="checklist">
+          <li>Will [target underwriters] accept AI-assisted examination memo with clause-level audit trail?</li>
+          <li>Does examiner approval + work papers satisfy underwriter's vendor oversight requirement?</li>
+          <li>Any underwriter-specific prohibition on offshore or AI vendor examination support?</li>
+        </ul>
+      </section>
+
+      <section id="p3-onboarding">
+        <h2>3.9 Agency Onboarding Checklist</h2>
+        <p>Modeled on HabileData (3–5 business days) and HitechDigital (format alignment call). Required before first paid file.</p>
+
+        <table>
+          <thead><tr><th>Step</th><th>Duration</th><th>Deliverable</th></tr></thead>
+          <tbody>
+            <tr><td>1. Discovery call — volume, states, file types</td><td>Day 1</td><td>ICP fit confirmation</td></tr>
+            <tr><td>2. NDA + MSA + E&amp;O cert exchange</td><td>Day 1–2</td><td>Signed contracts</td></tr>
+            <tr><td>3. Underwriter template collection — Sched A/B/C formats</td><td>Day 2–3</td><td>Template library per underwriter</td></tr>
+            <tr><td>4. Sample file walkthrough — agency redacts 1 closed commercial file</td><td>Day 3–4</td><td>Format alignment sign-off</td></tr>
+            <tr><td>5. Pilot file #1 — discounted; full SLA applies</td><td>Day 5+</td><td>First deliverable package</td></tr>
+            <tr><td>6. Examiner feedback → template refinement</td><td>Post-pilot</td><td>Go/no-go for paid volume</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p3-conclusions">
+        <h2>3.10 Phase 3 Conclusions → Phase 4 Inputs</h2>
+        <ul class="checklist">
+          <li class="done">Billable unit = 8-artifact deliverable package with examiner approval gate</li>
+          <li class="done">SLA tiers T1–T3 defined; MVP launches on T1 single-parcel commercial</li>
+          <li class="done">1 free revision round included — competitive differentiator vs opaque LPO quotes</li>
+          <li class="done">Agency retains E&amp;O; bureau carries vendor E&amp;O + indemnification in MSA</li>
+          <li class="done">Underwriter path unchanged — bureau feeds examiner, not underwriter directly</li>
+          <li class="done">Audit trail = clause-level reasons, not confidence scores — Zaito bar matched</li>
+        </ul>
+      </section>
+
+      <!-- PHASE 4 -->
+      <section id="phase4">
+        <h2>Phase 4 — MVP Spec <span class="phase-badge">Complete</span></h2>
+        <p>Smallest shippable product unit derived from Phases 0–3. One paid file type, one SLA tier, one deliverable package, explicit acceptance gates. Build scope for pilot — not v2 roadmap.</p>
+
+        <blockquote class="final-spec">
+          <strong>MVP in one sentence:</strong> Accept one T1 commercial complex file from a SoftPro agency, deliver an 8-artifact commitment-ready package within 3 business days, include one revision round, priced at <strong>$199/file</strong> (hypothesis), with agency examiner approval required before use.
+        </blockquote>
+      </section>
+
+      <section id="p4-unit">
+        <h2>4.1 MVP Unit Definition</h2>
+
+        <table>
+          <thead><tr><th>Dimension</th><th>MVP v1 lock</th><th>Deferred</th></tr></thead>
+          <tbody>
+            <tr><td><strong>File type</strong></td><td>Commercial purchase — single parcel</td><td>Multi-parcel T2, probate-heavy T3</td></tr>
+            <tr><td><strong>Complexity</strong></td><td>11–30 recorded documents; meets ≥1 Phase 0 trigger</td><td>50+ doc chains, 6+ parcels</td></tr>
+            <tr><td><strong>Geography</strong></td><td>1 launch state (TBD Phase 6 — TX or FL candidate)</td><td>Multi-state, UK</td></tr>
+            <tr><td><strong>TPS</strong></td><td>SoftPro agencies; package handoff (no login)</td><td>SoftPro 360 write-back</td></tr>
+            <tr><td><strong>Underwriter</strong></td><td>1 underwriter template per pilot agency</td><td>Template library / self-serve</td></tr>
+            <tr><td><strong>SLA</strong></td><td>T1 — 3 business days</td><td>T2/T3, rush tier</td></tr>
+            <tr><td><strong>Revisions</strong></td><td>1 included round</td><td>Unlimited / datedown orders</td></tr>
+            <tr><td><strong>Volume target</strong></td><td>3–5 pilot files from 1–2 agencies</td><td>Self-serve ordering portal</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Order intake — minimum package from agency</h3>
+        <table>
+          <thead><tr><th>#</th><th>Required field</th><th>Validation</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Property address + county + state</td><td>Hard gate — no start without</td></tr>
+            <tr><td>2</td><td>Legal description (or parcel ID for search)</td><td>Hard gate</td></tr>
+            <tr><td>3</td><td>Buyer / seller / lender entity names</td><td>Hard gate</td></tr>
+            <tr><td>4</td><td>Proposed insureds + policy amounts</td><td>Hard gate for Schedule A</td></tr>
+            <tr><td>5</td><td>Underwriter name + commitment template version</td><td>Hard gate — onboarded at setup</td></tr>
+            <tr><td>6</td><td>Effective date target</td><td>Soft gate — defaults to order date</td></tr>
+            <tr><td>7</td><td>Prior policy / reissue info (if applicable)</td><td>Soft gate</td></tr>
+            <tr><td>8</td><td>Agency examiner contact for delivery</td><td>Hard gate</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p4-features">
+        <h2>4.2 Feature List — Build vs Manual</h2>
+        <p>MVP prioritizes the bureau deliverable path. AI features are means to T1 SLA, not the product itself.</p>
+
+        <table>
+          <thead><tr><th>Priority</th><th>Feature</th><th>Stage</th><th>MVP approach</th></tr></thead>
+          <tbody>
+            <tr><td><strong>P0</strong></td><td>Order intake form + validation</td><td>Intake</td><td>Web form or email template — manual OK</td></tr>
+            <tr><td><strong>P0</strong></td><td>Record retrieval (title plant + county)</td><td>B</td><td>DataTrace/manual + AI assist where available</td></tr>
+            <tr><td><strong>P0</strong></td><td>Abstract / run sheet generation</td><td>B</td><td>AI extract + bureau QA</td></tr>
+            <tr><td><strong>P0</strong></td><td>Chain-of-title analysis + gap flags</td><td>C</td><td>AI + bureau QA reviewer</td></tr>
+            <tr><td><strong>P0</strong></td><td>Schedule A / B-I / B-II / C draft</td><td>D</td><td>Template-driven; underwriter format from onboarding</td></tr>
+            <tr><td><strong>P0</strong></td><td>Clause-level audit trail</td><td>All</td><td>Every req/exception → source doc + excerpt</td></tr>
+            <tr><td><strong>P0</strong></td><td>8-artifact delivery package</td><td>Delivery</td><td>Secure portal or encrypted email</td></tr>
+            <tr><td><strong>P0</strong></td><td>Examiner approval tracking</td><td>Approval</td><td>Written confirmation + version ID</td></tr>
+            <tr><td><strong>P0</strong></td><td>Bureau QA pre-delivery checklist</td><td>QA</td><td>Human sign-off required</td></tr>
+            <tr><td><strong>P1</strong></td><td>Entity / judgment name search</td><td>B</td><td>Manual in MVP if county supports; automate v1.1</td></tr>
+            <tr><td><strong>P1</strong></td><td>Examination memo + curative checklist</td><td>C</td><td>AI draft; bureau QA</td></tr>
+            <tr><td><strong>P1</strong></td><td>Targeted Q&amp;A on source docs</td><td>C</td><td>Zaito-parity; post-MVP if time-constrained</td></tr>
+            <tr><td><strong>P2</strong></td><td>SoftPro structured import</td><td>Delivery</td><td>Phase 5 — PDF paste OK for pilot</td></tr>
+            <tr><td><strong>P2</strong></td><td>Self-serve agency portal</td><td>Intake</td><td>Post-pilot</td></tr>
+            <tr><td><strong>Out</strong></td><td>Curative execution, closing, policy</td><td>F</td><td>Never bureau scope</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart TB
+    subgraph mvp [MVP Build Scope]
+        F1[Intake validation]
+        F2[Search + abstract]
+        F3[Exam + flags]
+        F4[Commitment draft]
+        F5[Audit trail]
+        F6[Bureau QA]
+        F7[Delivery package]
+    end
+    subgraph manual [Manual in Pilot]
+        M1[County retrieval fallback]
+        M2[Judgment search]
+        M3[PDF paste to SoftPro]
+    end
+    subgraph later [Post-MVP]
+        L1[SoftPro import]
+        L2[Agency portal]
+        L3[T2/T3 tiers]
+    end
+    F1 --> F2 --> F3 --> F4 --> F5 --> F6 --> F7
+    F2 -.-> M1
+    F3 -.-> M2
+    F7 -.-> M3
+          </pre>
+        </div>
+      </section>
+
+      <section id="p4-pricing">
+        <h2>4.3 Pricing Hypothesis</h2>
+        <p>Derived from Phase 2 benchmarks and Phase 1 labor economics. Hypothesis for pilot — Phase 6 validates willingness to pay.</p>
+
+        <table>
+          <thead><tr><th>Input</th><th>Value</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td>In-house labor cost (complex file)</td><td>~$3,165</td><td>45 hrs × $70.33 FinCEN wage</td></tr>
+            <tr><td>Bureau-addressable hours (est.)</td><td>10–18 hrs</td><td>Phase 1</td></tr>
+            <tr><td>Offshore bureau est.</td><td>$75–250/file</td><td>Phase 2 — HitechDigital</td></tr>
+            <tr><td>AI augmentation (Zaito)</td><td>Unknown; 40–60% savings claim</td><td>Phase 2</td></tr>
+            <tr><td>Market research target range</td><td>$100–300/file</td><td>Phase 0 / market research</td></tr>
+          </tbody>
+        </table>
+
+        <h3>MVP price lock (pilot)</h3>
+        <table>
+          <thead><tr><th>Tier</th><th>Price</th><th>Rationale</th></tr></thead>
+          <tbody>
+            <tr><td><strong>T1 pilot file</strong></td><td class="verdict-pass"><strong>$199 / file</strong></td><td>Mid-range of $100–300 hypothesis; below offshore on complex; ~94% below in-house labor</td></tr>
+            <tr><td>Pilot discount (file #1–3)</td><td>$149 / file</td><td>Learning curve subsidy; still paid — validates willingness</td></tr>
+            <tr><td>Material error rework</td><td>$0</td><td>Phase 3 SLA policy</td></tr>
+            <tr><td>Revision round 2+</td><td>$49 / round</td><td>After 1 included round</td></tr>
+            <tr><td>Rush (post-MVP)</td><td>+50% ($299 T1)</td><td>Phase 3 rush tier</td></tr>
+            <tr><td>Additional parcel (post-MVP)</td><td>+$79 / parcel</td><td>T2 pricing building block</td></tr>
+          </tbody>
+        </table>
+
+        <div class="chart-card">
+          <h4>Unit Economics — MVP T1 at $199</h4>
+          <div class="chart-wrap">
+            <canvas id="chartUnitEconMVP"></canvas>
+          </div>
+          <p style="font-size:0.78rem;margin-top:0.5rem;">Cost assumptions are estimates for pilot planning — Phase 6 validates. Target gross margin ≥60% at scale.</p>
+        </div>
+
+        <h3>Pricing validation questions (Phase 6)</h3>
+        <ul class="checklist">
+          <li>Will agency pay $199 vs $149 offshore search-only + in-house exam?</li>
+          <li>Is outcome-per-file preferred over hourly LPO quote?</li>
+          <li>Does $199 feel credible for commercial vs “too cheap to trust”?</li>
+        </ul>
+      </section>
+
+      <section id="p4-acceptance">
+        <h2>4.4 Acceptance Criteria</h2>
+        <p>Three gates: bureau QA, agency examiner, pilot success. A file is not billable until examiner approval is recorded.</p>
+
+        <h3>Gate 1 — Bureau QA (pre-delivery)</h3>
+        <table>
+          <thead><tr><th>#</th><th>Criterion</th><th>Pass condition</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>All 8 artifacts present</td><td>Checklist 8/8</td></tr>
+            <tr><td>2</td><td>Schedule A fields complete</td><td>Effective date, insureds, amounts, vesting, legal</td></tr>
+            <tr><td>3</td><td>Every B-I requirement has audit link</td><td>100% linked — zero orphan requirements</td></tr>
+            <tr><td>4</td><td>Every B-II exception has audit link or marked standard</td><td>100% linked or tagged</td></tr>
+            <tr><td>5</td><td>Chain chart matches abstract</td><td>Bureau QA reviewer sign-off</td></tr>
+            <tr><td>6</td><td>Underwriter template compliance</td><td>Matches onboarded template version</td></tr>
+            <tr><td>7</td><td>SLA met</td><td>Delivered within 3 business days of complete intake</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Gate 2 — Agency examiner (pre-use)</h3>
+        <table>
+          <thead><tr><th>#</th><th>Criterion</th><th>Pass condition</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Examiner reviewed within 2 business days</td><td>Timestamp recorded</td></tr>
+            <tr><td>2</td><td>Spot-check ≥3 audit links verified against sources</td><td>Examiner attestation</td></tr>
+            <tr><td>3</td><td>Examiner approved or requested revision</td><td>Written record</td></tr>
+            <tr><td>4</td><td>No use before explicit approval</td><td>Contractual + operational</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Gate 3 — Pilot success (go/no-go to scale)</h3>
+        <table>
+          <thead><tr><th>Metric</th><th>Target</th><th>Measure</th></tr></thead>
+          <tbody>
+            <tr><td>Examiner approval rate (no revision)</td><td>≥60% of files</td><td>Files approved on first delivery ÷ total</td></tr>
+            <tr><td>Material error rate</td><td>&lt;5% of files</td><td>Missed recorded instrument found post-approval</td></tr>
+            <tr><td>Examiner review time</td><td>≤4 hours median</td><td>Self-reported or time-stamped</td></tr>
+            <tr><td>SLA hit rate</td><td>≥90%</td><td>On-time ÷ total T1 files</td></tr>
+            <tr><td>Agency re-order intent</td><td>≥1 agency commits to 5+ files/month</td><td>Phase 6 interview + LOI</td></tr>
+            <tr><td>Underwriter acceptance</td><td>0 rejections attributable to bureau draft</td><td>Agency feedback within 30 days</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p4-scope">
+        <h2>4.5 Scope Boundaries &amp; Build Sequence</h2>
+
+        <table>
+          <thead><tr><th>Sprint</th><th>Deliverable</th><th>Duration (est.)</th></tr></thead>
+          <tbody>
+            <tr><td><strong>S0</strong></td><td>Agency onboarding kit + MSA template + intake form</td><td>1 week</td></tr>
+            <tr><td><strong>S1</strong></td><td>Search + abstract pipeline for 1 launch state</td><td>2–3 weeks</td></tr>
+            <tr><td><strong>S2</strong></td><td>Examination + commitment draft + audit trail</td><td>2–3 weeks</td></tr>
+            <tr><td><strong>S3</strong></td><td>Bureau QA workflow + 8-artifact delivery package</td><td>1 week</td></tr>
+            <tr><td><strong>S4</strong></td><td>Pilot file #1 with design partner agency</td><td>1 week</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Explicitly not in MVP</h3>
+        <ul class="constraints">
+          <li>SoftPro API write-back (Phase 5 — PDF/manual import OK for pilot)</li>
+          <li>Multi-state expansion beyond 1 launch state</li>
+          <li>Residential files of any type</li>
+          <li>Curative execution, payoff ordering, recording</li>
+          <li>Policy issuance or CPL generation</li>
+          <li>Self-serve signup — concierge onboarding only</li>
+          <li>SOC-2 Type 1 — target before scale, not before file #1</li>
+        </ul>
+
+        <h3>Phase 4 conclusions → Phase 5–6 inputs</h3>
+        <ul class="checklist">
+          <li class="done">MVP = T1 single-parcel commercial, $199/file, 3-day SLA, 8-artifact package</li>
+          <li class="done">P0 features = intake through delivery + audit trail; manual OK for county/judgment gaps</li>
+          <li class="done">Billable event = examiner approval, not delivery alone</li>
+          <li class="done">Pilot success = 60% first-pass approval, &lt;5% material errors, 1 re-order commitment</li>
+          <li class="done">Phase 5 defines SoftPro import format; Phase 6 validates $199 price point</li>
+        </ul>
+      </section>
+
+      <!-- PHASE 5 -->
+      <section id="phase5">
+        <h2>Phase 5 — Integration Map <span class="phase-badge">Complete</span></h2>
+        <p>How bureau output lands in SoftPro, where search data comes from, and the structured import format examiners use. Desk research from SoftPro 360 docs, Sync user guides, DataTrace Digital Gateway, Pippin Title integration pattern, and county API samples.</p>
+
+        <blockquote class="final-spec">
+          <strong>Integration thesis:</strong> Pilot on <em>package handoff</em> (no bureau SoftPro login). Deliver PDF commitment + JSON sidecar + audit trail; examiner imports into SoftPro Ready Docs. Post-pilot path = SoftPro 360 Sync provider → full 360 vendor listing. DataTrace TPS is the primary plant; county APIs and manual fallback fill gaps.
+        </blockquote>
+      </section>
+
+      <section id="p5-strategy">
+        <h2>5.1 Integration Strategy — v1 Pilot vs Post-Pilot</h2>
+        <p>Phase 4 locked package handoff for file #1. Phase 5 defines what that means technically and the upgrade path to native SoftPro delivery — without blocking pilot on vendor onboarding timelines.</p>
+
+        <table>
+          <thead><tr><th>Stage</th><th>Integration mode</th><th>Agency experience</th><th>Bureau build effort</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td><strong>v1 Pilot</strong></td><td>Secure portal + encrypted email delivery</td><td>Examiner downloads 8-artifact package; pastes commitment into SoftPro Ready Doc; attaches PDFs to order</td><td>Low — delivery portal + JSON schema</td><td>File #1–5</td></tr>
+            <tr><td><strong>v1.5</strong></td><td>Structured import helper</td><td>Examiner runs import spreadsheet or bureau-provided macro into SoftPro fields; PDF auto-attached</td><td>Medium — field mapping per underwriter template</td><td>After pilot approval</td></tr>
+            <tr><td><strong>v2</strong></td><td>SoftPro 360 Sync provider</td><td>Agency orders from 360 → bureau receives order data + returns commitment via 360 Queue</td><td>High — SoftPro partnership + Sync onboarding</td><td>Post-LOI, pre-scale</td></tr>
+            <tr><td><strong>v3</strong></td><td>Full 360 vendor listing</td><td>Same as Pippin — order from Services tab; commitment items sync into file</td><td>High — vendor certification + ongoing API maintenance</td><td>Scale (5+ agencies)</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Design constraints (non-negotiable)</h3>
+        <ul class="constraints">
+          <li><strong>No bureau SoftPro login in v1</strong> — agency retains TPS control; bureau is external vendor with MSA</li>
+          <li><strong>Human examiner approval before import</strong> — delivery ≠ approval; examiner reviews package first</li>
+          <li><strong>Agency owns DataTrace credentials</strong> — bureau processes agency-provided plant data or orders via agency-delegated access; bureau does not resell plant access</li>
+          <li><strong>Audit trail travels with commitment</strong> — JSON sidecar links every schedule item to source; not optional in any integration stage</li>
+          <li><strong>Underwriter path unchanged</strong> — bureau never submits to underwriter; agency examiner imports, approves, then agency submits via existing 360 underwriter integration</li>
+        </ul>
+      </section>
+
+      <section id="p5-softpro">
+        <h2>5.2 SoftPro Integration Paths</h2>
+        <p>SoftPro exposes four practical integration surfaces for a managed bureau. Competitors (Pippin Title, DataTrace TPS, Pythonic, RezeLink) use paths B–C. Our wedge starts at A and graduates to B.</p>
+
+        <table>
+          <thead><tr><th>Path</th><th>SoftPro mechanism</th><th>Data flow</th><th>Used by</th><th>Our stage</th></tr></thead>
+          <tbody>
+            <tr><td><strong>A — Package handoff</strong></td><td>External delivery → examiner manual import</td><td>Agency exports order spec → bureau → PDF + JSON back → examiner paste into Ready Doc / attachments folder</td><td>Offshore LPOs (email PDF)</td><td class="verdict-pass"><strong>v1 Pilot</strong></td></tr>
+            <tr><td><strong>B — SoftPro 360 Sync</strong></td><td>360 Queue — requestor ↔ provider</td><td>Order data + docs auto-import on Accept; provider Submit returns data + docs to requestor file</td><td>Agency-to-agency search exchange</td><td>v2 target</td></tr>
+            <tr><td><strong>C — 360 vendor portal</strong></td><td>Services tab → vendor order → auto-return</td><td>One-time data entry from SoftPro file; vendor returns search/commitment into attachments + fields</td><td>Pippin Title, DataTrace, Pythonic, MaestroX</td><td>v3 target</td></tr>
+            <tr><td><strong>D — Custom dev / API</strong></td><td>SoftPro Select API + ProDesign Ready Docs</td><td>Bespoke field mapping, merge docs, automation triggers</td><td>Enterprise agencies via SoftPro services</td><td>Per-agency if needed</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart TB
+    subgraph v1 [v1 Pilot - Path A]
+        A1[Agency opens SoftPro order]
+        A2[Agency sends intake package]
+        A3[Bureau delivers 8 artifacts]
+        A4[Examiner reviews + approves]
+        A5[Examiner imports to SoftPro]
+        A1 --> A2 --> A3 --> A4 --> A5
+    end
+    subgraph v2 [v2 - Path B Sync]
+        B1[Agency orders via 360 Sync]
+        B2[Bureau Accept into queue]
+        B3[Bureau produces + Submit]
+        B4[Agency Accept results to file]
+        B1 --> B2 --> B3 --> B4
+    end
+    subgraph v3 [v3 - Path C Vendor]
+        C1[360 Services - Bureau listing]
+        C2[Auto order data transfer]
+        C3[Commitment sync to file]
+        C1 --> C2 --> C3
+    end
+    v1 -.->|Post-pilot| v2
+    v2 -.->|Scale| v3
+          </pre>
+        </div>
+
+        <h3>SoftPro 360 Sync — provider workflow (v2 reference)</h3>
+        <p>From SoftPro Sync Title Provider User Guide v1.0. Bureau becomes a Sync <em>provider</em>; agency is <em>requestor</em>.</p>
+        <table>
+          <thead><tr><th>Step</th><th>Actor</th><th>Action</th><th>Data exchanged</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Agency (requestor)</td><td>Send title search / commitment request via 360</td><td>Buyer, seller, legal, loan amount, sales price, order notes</td></tr>
+            <tr><td>2</td><td>Bureau (provider)</td><td>Review request in 360 Queue → Accept</td><td>Import selected data + attached docs into bureau order</td></tr>
+            <tr><td>3</td><td>Bureau</td><td>Produce search + commitment draft</td><td>Internal — same 8-artifact pipeline</td></tr>
+            <tr><td>4</td><td>Bureau</td><td>Submit via 360 — select data groups + attach docs</td><td>Commitment PDF, schedule data, notes</td></tr>
+            <tr><td>5</td><td>Agency</td><td>Review returned data → Accept into linked SoftPro order</td><td>Fields overwrite; docs land in attachments</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Onboarding requirement:</strong> SoftPro partner request — “Interested in becoming a partner?” on 360 integrations page or Sync provider contact (800-848-0143). Timeline unknown; assume 8–16 weeks — too slow for file #1, right-sized for post-pilot.</p>
+
+        <h3>Pippin Title pattern — what “good” looks like at v3</h3>
+        <p>Pippin (Phase 2 competitor) is the reference implementation for Path C: order via <code>360 → Services → Title Services → Pippin Title</code>; order fields auto-populate from SoftPro file; commitment items sync back with no double entry. Our v3 goal matches this UX but for <em>managed commercial examination</em> with audit trail — a capability Pippin does not publicly claim.</p>
+      </section>
+
+      <section id="p5-intake">
+        <h2>5.3 Intake Spec — Agency → Bureau</h2>
+        <p>Maps Phase 4 intake fields to SoftPro order data. Agency exports or copy-pastes from an open commercial order; bureau does not need TPS access.</p>
+
+        <table>
+          <thead><tr><th>Intake field (Phase 4)</th><th>SoftPro source (Select commercial)</th><th>Export method (v1)</th></tr></thead>
+          <tbody>
+            <tr><td>Property address + county + state</td><td>Property tab — address, county</td><td>Copy or screenshot; intake form</td></tr>
+            <tr><td>Legal description / parcel ID</td><td>Schedule C / property legal</td><td>Paste text or PDF export</td></tr>
+            <tr><td>Buyer / seller / lender entities</td><td>Parties tab; charge lines</td><td>Party list export or form</td></tr>
+            <tr><td>Proposed insureds + amounts</td><td>Commitment / policy setup</td><td>Schedule A preview fields</td></tr>
+            <tr><td>Underwriter + template version</td><td>Underwriter selection; doc template</td><td>Onboarded at agency setup — static per pilot</td></tr>
+            <tr><td>Effective date target</td><td>Order dates</td><td>Intake form default</td></tr>
+            <tr><td>Prior policy / reissue</td><td>Prior policy fields</td><td>Optional attachment</td></tr>
+            <tr><td>Examiner contact</td><td>Task assignee / contact</td><td>Email + phone in intake</td></tr>
+            <tr><td><strong>Search data (optional)</strong></td><td>360 → DataTrace TPS results in attachments</td><td>Agency forwards plant PDFs or grants read-only plant export</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Search data handoff options</h3>
+        <table>
+          <thead><tr><th>Option</th><th>Who orders search</th><th>Bureau receives</th><th>Pros / cons</th></tr></thead>
+          <tbody>
+            <tr><td><strong>1 — Agency orders DataTrace via 360</strong></td><td>Agency</td><td>Plant PDFs + run sheet from attachments folder</td><td>Low friction; agency keeps plant relationship; bureau adds exam layer only</td></tr>
+            <tr><td><strong>2 — Bureau orders via agency-delegated plant access</strong></td><td>Bureau (agency credentials)</td><td>Direct plant API / portal export</td><td>Faster for overflow; requires credential sharing — MSA clause</td></tr>
+            <tr><td><strong>3 — Bureau sources independently</strong></td><td>Bureau</td><td>County API + third-party plant</td><td>Full control; higher cost; duplicate plant fees</td></tr>
+            <tr><td><strong>4 — Agency provides prior search</strong></td><td>Agency (existing)</td><td>Prior abstract / commitment</td><td>Update/bringdown files; effective date critical</td></tr>
+          </tbody>
+        </table>
+        <blockquote class="locked">
+          <strong>Pilot default:</strong> Option 1 — agency orders DataTrace TPS through existing SoftPro 360 integration; forwards plant package to bureau. Minimizes credential risk and validates bureau value on examination + draft, not search logistics.
+        </blockquote>
+      </section>
+
+      <section id="p5-dataplant">
+        <h2>5.4 Data Plant Map</h2>
+        <p>Where recorded instruments, tax status, and judgment data come from for T1 single-parcel commercial files. Launch state TBD (Phase 6 — TX or FL candidate); map is jurisdiction-agnostic with tiered fallback.</p>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart LR
+    subgraph tier1 [Tier 1 - Title Plants]
+        DT[DataTrace TPS]
+        CJ[Charles Jones regional]
+        TF[TitleFlex / TitleIQ]
+    end
+    subgraph tier2 [Tier 2 - County Direct]
+        API[County REST APIs]
+        PORTAL[County recorder portals]
+    end
+    subgraph tier3 [Tier 3 - AI Retrieval]
+        PY[Pythonic agents]
+        AG[Generic web agents]
+    end
+    subgraph tier4 [Tier 4 - Manual]
+        GS[Ground searchers]
+        AGY[Agency in-person]
+    end
+    BUREAU[Managed Bureau]
+    tier1 --> BUREAU
+    tier2 --> BUREAU
+    tier3 --> BUREAU
+    tier4 --> BUREAU
+          </pre>
+        </div>
+
+        <h3>Tier 1 — Title production services (primary)</h3>
+        <table>
+          <thead><tr><th>Source</th><th>Coverage</th><th>SoftPro path</th><th>Products</th><th>MVP use</th></tr></thead>
+          <tbody>
+            <tr><td><strong>DataTrace</strong></td><td>560+ title plants; 7B+ doc images nationwide</td><td>SoftPro 360 → DataTrace; Digital Gateway API</td><td>TPS (examined + non-examined), TaxSource, tax certs (CO/TX)</td><td class="verdict-pass"><strong>Primary</strong> — agency orders via 360</td></tr>
+            <tr><td>Charles Jones</td><td>Regional (Mid-Atlantic, etc.)</td><td>Digital Gateway</td><td>Regional TPS</td><td>Fallback where DT thin</td></tr>
+            <tr><td>Pippin Title</td><td>Nationwide search network</td><td>SoftPro 360 vendor</td><td>Search + commitment (competitor)</td><td>Not used — competitor</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Tier 2 — County direct access</h3>
+        <table>
+          <thead><tr><th>Access type</th><th>Examples</th><th>API / cost pattern</th><th>When used</th></tr></thead>
+          <tbody>
+            <tr><td><strong>REST API (fee-based)</strong></td><td>OKCountyRecords, ARCountyRecords</td><td>150 free results/day; ~$0.01/result after; ~$0.40–1.00/image</td><td>Gap-fill instruments missing from plant; pilot launch county if API exists</td></tr>
+            <tr><td><strong>Portal (no API)</strong></td><td>Majority of US counties</td><td>Manual or AI agent navigation</td><td>27% of files still need non-digital retrieval (ALTA)</td></tr>
+            <tr><td><strong>Clerk in-person</strong></td><td>Rural / non-indexed counties</td><td>Ground searcher fee</td><td>Tier 4 escalation</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Tier 3 &amp; 4 — AI retrieval and manual fallback</h3>
+        <table>
+          <thead><tr><th>Tier</th><th>Method</th><th>Cost driver</th><th>MVP stance</th></tr></thead>
+          <tbody>
+            <tr><td><strong>3 — AI county agents</strong></td><td>Pythonic, Skyvern-style portal navigation</td><td>Per-county setup + per-retrieval</td><td>P1 — automate v1.1 for pilot launch county</td></tr>
+            <tr><td><strong>4 — Manual</strong></td><td>Bureau staff or contracted searcher</td><td>Labor ~$25–75/doc</td><td>P0 fallback — budget 2–4 hrs/file for gap counties</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Judgment / lien / entity searches (P1 in MVP)</h3>
+        <table>
+          <thead><tr><th>Search type</th><th>Typical source</th><th>Automation</th><th>Gap</th></tr></thead>
+          <tbody>
+            <tr><td>Federal tax liens</td><td>PACER / IRS records</td><td>Manual in MVP</td><td>Credentialing + fees</td></tr>
+            <tr><td>State judgment index</td><td>County clerk / state court portal</td><td>County-dependent</td><td>Phase 6 — validate launch state</td></tr>
+            <tr><td>UCC fixture filings</td><td>State SOS UCC</td><td>Partial API in some states</td><td>Commercial T1 may need; manual OK</td></tr>
+            <tr><td>Entity status</td><td>State SOS business search</td><td>Most states have free web search</td><td>AI extract + bureau QA</td></tr>
+          </tbody>
+        </table>
+
+        <div class="chart-card">
+          <h4>Data Source Priority by File Stage</h4>
+          <div class="chart-wrap">
+            <canvas id="chartDataPlant"></canvas>
+          </div>
+          <p style="font-size:0.78rem;margin-top:0.5rem;">Relative reliance (% of instruments) for T1 single-parcel commercial in a digitized launch county — estimates for pilot planning.</p>
+        </div>
+      </section>
+
+      <section id="p5-output">
+        <h2>5.5 Output Format — SoftPro Import Spec</h2>
+        <p>Structured deliverable format so agency examiners can import an approved commitment in one session. PDF remains the legal review artifact; JSON sidecar enables field import and audit linkage.</p>
+
+        <h3>Delivery package structure (v1)</h3>
+        <table>
+          <thead><tr><th>File</th><th>Format</th><th>SoftPro destination</th><th>Import method</th></tr></thead>
+          <tbody>
+            <tr><td><code>{order_id}_commitment.pdf</code></td><td>PDF</td><td>Attachments / Ready Doc preview</td><td>Attach to order; examiner edits in ProDesign if needed</td></tr>
+            <tr><td><code>{order_id}_commitment.json</code></td><td>JSON sidecar</td><td>Schedule A/B/C fields</td><td>Import helper or manual field copy (v1); Sync data groups (v2)</td></tr>
+            <tr><td><code>{order_id}_abstract.xlsx</code></td><td>Spreadsheet</td><td>Attachments</td><td>Attach; reference during review</td></tr>
+            <tr><td><code>{order_id}_audit_trail.json</code></td><td>JSON + PDF summary</td><td>Attachments + examiner reference</td><td>Attach; spot-check links per Phase 3</td></tr>
+            <tr><td><code>{order_id}_sources/</code></td><td>PDF folder</td><td>Attachments subfolder</td><td>Bulk attach indexed docs</td></tr>
+            <tr><td>Remaining artifacts (memo, chain chart, curative list, receipt)</td><td>PDF</td><td>Attachments</td><td>Attach as examiner review bundle</td></tr>
+          </tbody>
+        </table>
+
+        <h3>JSON sidecar schema (commitment v1.0)</h3>
+        <p>Minimal schema for pilot — maps to ALTA commitment schedules and Phase 3 audit requirements. Versioned; breaking changes increment <code>schema_version</code>.</p>
+        <table>
+          <thead><tr><th>Top-level key</th><th>Type</th><th>Maps to</th></tr></thead>
+          <tbody>
+            <tr><td><code>schema_version</code></td><td>string</td><td>"1.0" — bureau schema semver</td></tr>
+            <tr><td><code>file_id</code></td><td>string</td><td>Bureau internal + agency order ref</td></tr>
+            <tr><td><code>underwriter_template</code></td><td>string</td><td>Onboarded template ID (e.g., "stewart_commercial_v2024")</td></tr>
+            <tr><td><code>effective_date</code></td><td>ISO date</td><td>Schedule A</td></tr>
+            <tr><td><code>schedule_a</code></td><td>object</td><td>Commitment date, proposed insureds[], policy_amounts[], vesting, estate_type</td></tr>
+            <tr><td><code>schedule_b1[]</code></td><td>array</td><td>requirements — each: <code>id, text, audit_ref</code></td></tr>
+            <tr><td><code>schedule_b2[]</code></td><td>array</td><td>exceptions — each: <code>id, text, standard_flag, audit_ref</code></td></tr>
+            <tr><td><code>schedule_c[]</code></td><td>array</td><td>Legal descriptions — one object per parcel</td></tr>
+            <tr><td><code>audit_trail[]</code></td><td>array</td><td>Each: <code>item_id, source_doc, book_page, page_clause, excerpt, retrieved_at, origin</code></td></tr>
+            <tr><td><code>delivery_meta</code></td><td>object</td><td>Timestamp, bureau_qa_signoff, revision_round</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Examiner import workflow (v1 pilot — ~30–60 min)</h3>
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+sequenceDiagram
+    participant Portal as Bureau Portal
+    participant Exam as Agency Examiner
+    participant SP as SoftPro Select
+    participant UW as Underwriter 360
+
+    Portal->>Exam: 8-artifact package + JSON sidecar
+    Exam->>Exam: Review memo, spot-check 3+ audit links
+    Exam->>SP: Open commercial order
+    Exam->>SP: Attach source PDFs to order folder
+    Exam->>SP: Open commitment Ready Doc template
+    Exam->>SP: Copy Schedule A/B/C from JSON or PDF
+    Exam->>SP: Mark task Commitment Ready for Review complete
+    Exam->>Exam: Written approval email to bureau
+    Exam->>SP: Publish commitment to file
+    SP->>UW: Agency submits via existing 360 integration
+          </pre>
+        </div>
+
+        <h3>v1.5 import helper — CSV field map</h3>
+        <p>Optional spreadsheet generated from JSON for examiners who prefer tabular paste. One row per B-I requirement / B-II exception with columns: <code>Schedule, Item#, Text, Source Doc, Book/Page, Audit Link</code>. Maps 1:1 to SoftPro ProDesign merge fields when agency provides field name list at onboarding.</p>
+
+        <h3>Automation triggers (agency-side — recommended setup)</h3>
+        <table>
+          <thead><tr><th>SoftPro automation</th><th>Trigger</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr><td>Task: "Bureau delivery received"</td><td>Examiner marks intake complete</td><td>Assign to senior examiner; due +2 business days</td></tr>
+            <tr><td>Task: "Commitment approved"</td><td>Examiner closes review task</td><td>Trigger underwriter submission checklist</td></tr>
+            <tr><td>Status milestone</td><td>Examiner approval recorded</td><td>Update order status → Commitment Issued</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p5-roadmap">
+        <h2>5.6 Integration Roadmap &amp; Build Additions</h2>
+        <p>Extends Phase 4 build sequence (S0–S4) with integration-specific work. Does not block pilot file #1.</p>
+
+        <table>
+          <thead><tr><th>Sprint</th><th>Deliverable</th><th>Depends on</th><th>Duration</th></tr></thead>
+          <tbody>
+            <tr><td><strong>I0</strong></td><td>JSON sidecar schema v1.0 + sample files</td><td>S2 commitment draft</td><td>3 days (parallel S2)</td></tr>
+            <tr><td><strong>I1</strong></td><td>Delivery portal (secure download + version ID)</td><td>S3 delivery package</td><td>1 week (parallel S3)</td></tr>
+            <tr><td><strong>I2</strong></td><td>Agency onboarding: SoftPro field map + Ready Doc template capture</td><td>Design partner signed</td><td>1 week (pre file #1)</td></tr>
+            <tr><td><strong>I3</strong></td><td>SoftPro Sync provider application submitted</td><td>Pilot LOI</td><td>Ext. 8–16 wks</td></tr>
+            <tr><td><strong>I4</strong></td><td>Launch county API connector (if digitized)</td><td>Phase 6 state lock</td><td>1–2 weeks</td></tr>
+            <tr><td><strong>I5</strong></td><td>360 vendor listing + certification</td><td>Sync provider live + 10+ files</td><td>Ext. timeline</td></tr>
+          </tbody>
+        </table>
+
+        <div class="chart-card">
+          <h4>Integration Maturity vs Agency Effort</h4>
+          <div class="chart-wrap">
+            <canvas id="chartIntegrationMaturity"></canvas>
+          </div>
+          <p style="font-size:0.78rem;margin-top:0.5rem;">Examiner minutes per file import — estimates. v1 pilot targets &lt;60 min import after approval.</p>
+        </div>
+
+        <h3>Security &amp; compliance by stage</h3>
+        <table>
+          <thead><tr><th>Control</th><th>v1 Pilot</th><th>v2 Sync</th><th>Scale</th></tr></thead>
+          <tbody>
+            <tr><td>Data in transit</td><td>TLS 1.2+ portal; encrypted email fallback</td><td>SoftPro 360 secure exchange</td><td>Same + API mTLS</td></tr>
+            <tr><td>Data at rest</td><td>Encrypted storage; 90-day retention default</td><td>+ order-linked audit log</td><td>SOC-2 Type 1 target</td></tr>
+            <tr><td>PII / property data</td><td>MSA DPA; no resale</td><td>Same</td><td>Annual pen test</td></tr>
+            <tr><td>Agency credentials</td><td>Not stored in v1</td><td>Optional delegated plant access — vault</td><td>Credential vault + rotation</td></tr>
+            <tr><td>E&amp;O chain</td><td>Delivery receipt + examiner approval record</td><td>Sync transaction log</td><td>Full provenance export</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Phase 5 conclusions → Phase 6 inputs</h3>
+        <ul class="checklist">
+          <li class="done">v1 pilot = package handoff; PDF + JSON sidecar; examiner paste — no SoftPro login required</li>
+          <li class="done">DataTrace TPS via agency 360 order = primary plant path; county API + manual = fallback tiers</li>
+          <li class="done">JSON commitment schema v1.0 defined — maps schedules + clause-level audit trail</li>
+          <li class="done">Post-pilot path = SoftPro 360 Sync provider → full vendor listing (Pippin pattern)</li>
+          <li class="done">Build additions I0–I2 parallel pilot; I3–I5 post-LOI — do not block file #1</li>
+          <li>Phase 6 must validate: examiner import time ≤60 min, agency willingness to forward DataTrace package, launch county digitization level</li>
+        </ul>
+      </section>
+
+      <!-- PHASE 6 -->
+      <section id="phase6">
+        <h2>Phase 6 — Validation Plan <span class="phase-badge">Complete</span></h2>
+        <p>Structured discovery to resolve five open hypotheses from Phase 0 before build commitment. Five to ten calls with independent SoftPro agencies; scored rubric; three-tier go/no-go gates. Desk research is done — this phase defines <em>what to ask</em> and <em>what must be true</em> to proceed.</p>
+
+        <blockquote class="final-spec">
+          <strong>Validation thesis:</strong> Run 5–10 discovery calls with Phase 0 ICP agencies. If ≥3 express pilot interest, ≥2 accept $199 T1 pricing, and zero hard underwriter blockers surface — proceed to design partner LOI and S0 build. If not — pivot wedge (commercial augmentation fallback) or launch state before writing code.
+        </blockquote>
+      </section>
+
+      <section id="p6-objectives">
+        <h2>6.1 Objectives &amp; Timeline</h2>
+
+        <table>
+          <thead><tr><th>Objective</th><th>Success signal</th><th>Method</th></tr></thead>
+          <tbody>
+            <tr><td>Confirm demand for managed commercial bureau</td><td>≥3/5 agencies cite examiner capacity pain on complex files</td><td>Discovery calls</td></tr>
+            <tr><td>Validate $199 T1 price point</td><td>≥2/5 rate price “fair” or “cheap” on 5-point scale</td><td>Pricing ladder question</td></tr>
+            <tr><td>De-risk underwriter acceptance</td><td>Zero agencies report hard prohibition on vendor exam support</td><td>Underwriter-specific probes</td></tr>
+            <tr><td>Confirm integration feasibility</td><td>≥2/5 already forward DataTrace plant PDFs to vendors</td><td>Workflow questions</td></tr>
+            <tr><td>Recruit design partner</td><td>1 signed LOI for 3–5 pilot files at $149/file</td><td>Post-call follow-up</td></tr>
+            <tr><td>Lock launch state + county</td><td>1 digitized county with API or strong plant coverage</td><td>State comparison + agency geography</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Execution timeline (projected)</h3>
+        <table>
+          <thead><tr><th>Week</th><th>Activity</th><th>Output</th></tr></thead>
+          <tbody>
+            <tr><td><strong>W1</strong></td><td>Recruit 8–12 outreach targets; schedule 5–10 calls</td><td>Outreach log; calendar holds</td></tr>
+            <tr><td><strong>W2</strong></td><td>Run discovery calls (30–45 min each); score in rubric</td><td>Completed interview notes</td></tr>
+            <tr><td><strong>W3</strong></td><td>Gate 1 scoring; follow-up with top 3 candidates</td><td>Go/no-go decision memo</td></tr>
+            <tr><td><strong>W4</strong></td><td>Design partner LOI + NDA; collect underwriter template</td><td>Signed LOI or pivot decision</td></tr>
+            <tr><td><strong>W5+</strong></td><td>S0–S4 build per Phase 4; pilot file #1</td><td>First deliverable package</td></tr>
+          </tbody>
+        </table>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart TB
+    START[Desk research complete Ph 0-5] --> OUT[Outreach 8-12 ICP agencies]
+    OUT --> CALLS[5-10 discovery calls]
+    CALLS --> G1{Gate 1 Pass?}
+    G1 -->|Yes| LOI[Design partner LOI]
+    G1 -->|No| PIVOT[Pivot or refine wedge]
+    LOI --> BUILD[S0-S4 build]
+    BUILD --> PILOT[Pilot files 1-5]
+    PILOT --> G2{Gate 2 Pass?}
+    G2 -->|Yes| SCALE[Scale + Sync application]
+    G2 -->|No| ITERATE[Template + process iteration]
+          </pre>
+        </div>
+      </section>
+
+      <section id="p6-recruitment">
+        <h2>6.2 Participant Recruitment</h2>
+        <p>Target Phase 0 ICP: independent SoftPro agencies, 5–50 employees, commercial or mixed book, currently using offshore/LPO or overloaded in-house examiners.</p>
+
+        <h3>Screening criteria (must meet ≥4 of 6)</h3>
+        <table>
+          <thead><tr><th>#</th><th>Criterion</th><th>Screening question</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>SoftPro user (Standard, Select, or Enterprise)</td><td>“What TPS do you run?”</td></tr>
+            <tr><td>2</td><td>Independent agency (not FAM/Stewart/WFG-owned)</td><td>“Who owns the agency?”</td></tr>
+            <tr><td>3</td><td>5–50 employees</td><td>“How many on staff?”</td></tr>
+            <tr><td>4</td><td>Handles commercial files (≥5/month or ≥10% of book)</td><td>“How many commercial files per month?”</td></tr>
+            <tr><td>5</td><td>Uses external vendor for search or exam today</td><td>“Do you offshore or use a bureau on hard files?”</td></tr>
+            <tr><td>6</td><td>Uses SoftPro 360 for DataTrace or search vendors</td><td>“How do you order plant searches?”</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Exclusions (disqualify)</h3>
+        <ul class="constraints">
+          <li>Qualia Core-only shops (no SoftPro)</li>
+          <li>Pure residential purchase agencies with no commercial volume</li>
+          <li>Underwriter-owned captive agencies (different buying process)</li>
+          <li>Agencies in states with vendor-to-principal licensing restrictions that block our model (screen per state)</li>
+        </ul>
+
+        <h3>Recruitment channels</h3>
+        <table>
+          <thead><tr><th>Channel</th><th>Approach</th><th>Expected yield</th></tr></thead>
+          <tbody>
+            <tr><td><strong>ALTA directory + state association lists</strong></td><td>Filter independent agencies in TX/FL; cold email title manager</td><td>2–3 calls per 20 outreach</td></tr>
+            <tr><td><strong>SoftPro user community</strong></td><td>SoftPro LIVE forums, LinkedIn SoftPro groups, webinar attendees</td><td>1–2 warm intros</td></tr>
+            <tr><td><strong>LinkedIn — commercial title examiner / ops manager</strong></td><td>Direct message; offer 30-min industry research call (not sales pitch)</td><td>1–2 calls per 15 messages</td></tr>
+            <tr><td><strong>Referral from market research network</strong></td><td>Attorney/realtor/lender contacts who know title ops</td><td>1 design partner candidate</td></tr>
+            <tr><td><strong>ALTA Marketplace / vendor events</strong></td><td>TitleTech, ALTA ONE — booth conversations</td><td>Longer lead; defer if W1–W2 short</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Outreach email template (short)</h3>
+        <blockquote class="locked">
+          <strong>Subject:</strong> 30-min research call — commercial exam workflow on SoftPro<br><br>
+          Hi [Name], I'm researching how independent agencies handle overflow commercial examination on SoftPro — not selling anything. Looking for 30 minutes with a title manager or senior examiner who's dealt with complex files (11+ instruments, entity vesting, etc.). Happy to share aggregated findings from our desk research. Would [date] work?
+        </blockquote>
+
+        <h3>Call roles to interview</h3>
+        <table>
+          <thead><tr><th>Role</th><th>Why</th><th>Priority</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Title / operations manager</strong></td><td>Budget authority; vendor selection; volume pain</td><td class="verdict-pass">Required</td></tr>
+            <tr><td><strong>Senior commercial examiner</strong></td><td>Approval workflow; quality bar; import time</td><td class="verdict-pass">Required if possible</td></tr>
+            <tr><td><strong>Owner / principal</strong></td><td>MSA sign-off; E&amp;O comfort</td><td>Ideal on call 2</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p6-validations">
+        <h2>6.3 Five Open Validations — Hypotheses &amp; Test Design</h2>
+        <p>Maps Phase 0 open validations to interview questions, pass/fail thresholds, and fallback actions.</p>
+
+        <table>
+          <thead><tr><th>#</th><th>Hypothesis</th><th>Interview questions</th><th>Pass threshold</th><th>Fail action</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>V1</strong></td>
+              <td>Independent agencies will pay an outsider for managed commercial examination</td>
+              <td>Q8–Q10, Q14 (current vendor spend, overflow behavior, pilot interest)</td>
+              <td>≥3/5 currently outsource or want to; ≥2/5 “interested” in pilot</td>
+              <td>Pivot to augmentation SaaS (Zaito-compete lane) or narrow to search-only</td>
+            </tr>
+            <tr>
+              <td><strong>V2</strong></td>
+              <td>Underwriter accepts vendor AI output when examiner approves + audit trail present</td>
+              <td>Q11–Q13 (underwriter name, vendor policy, prior rejections)</td>
+              <td>Zero hard “no vendor exam” policies cited; ≥2/5 say work papers + approval sufficient</td>
+              <td>Pre-clear with target underwriter compliance team before pilot</td>
+            </tr>
+            <tr>
+              <td><strong>V3</strong></td>
+              <td>$199/file is acceptable vs offshore LPO + in-house exam</td>
+              <td>Q15–Q17 (pricing ladder, comparison to current spend)</td>
+              <td>≥2/5 rate $199 “fair” or “cheap”; none rate “too cheap to trust” without other objections</td>
+              <td>Test $249 or $299; or bundle search+exam differently</td>
+            </tr>
+            <tr>
+              <td><strong>V4</strong></td>
+              <td>Market willingness exists (Zaito POC conversion as proxy)</td>
+              <td>Q18–Q19 (AI tool adoption, Zaito awareness, paid vs free tolerance)</td>
+              <td>≥2/5 pay for external tools today; ≥1/5 tried or evaluated Zaito/similar</td>
+              <td>Extend desk research; monitor Zaito pricing announcement</td>
+            </tr>
+            <tr>
+              <td><strong>V5</strong></td>
+              <td>Commercial wedge unit economics beat residential at scale</td>
+              <td>Q5–Q7 (file mix, hours per complex file, examiner cost)</td>
+              <td>Median self-reported complex file hours ≥8; agencies confirm commercial pays more than residential outsource</td>
+              <td>Revisit T2 multi-parcel pricing; validate cost model assumptions</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Phase 5 integration sub-validations (folded into calls)</h3>
+        <table>
+          <thead><tr><th>Sub-test</th><th>Question</th><th>Pass</th></tr></thead>
+          <tbody>
+            <tr><td>DataTrace handoff</td><td>“Would you forward plant PDFs from your 360 DataTrace order to an external examiner?”</td><td>≥2/5 say yes or already do</td></tr>
+            <tr><td>Import time</td><td>“How long does it take to paste a vendor commitment into SoftPro today?”</td><td>Baseline ≤90 min — our target ≤60 min is improvement</td></tr>
+            <tr><td>Launch county digitization</td><td>“Which counties do most commercial files land in? Digital or in-person retrieval?”</td><td>Identify county with API or strong plant for I4 build</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p6-script">
+        <h2>6.4 Discovery Interview Script</h2>
+        <p>30–45 minutes. Lead with research framing — not a sales demo. Record with permission; take structured notes against rubric (§6.7).</p>
+
+        <h3>Opening (2 min)</h3>
+        <blockquote class="locked">
+          “Thanks for making time. We're researching how independent SoftPro agencies handle complex commercial examination — files with long chains, entity vesting, easements. This isn't a sales call; we're trying to understand your workflow before building anything. May I ask a few questions about how you handle overflow and hard files? Nothing confidential needs to be shared — rough volumes and general process is enough.”
+        </blockquote>
+
+        <h3>Section A — Current state (8 min)</h3>
+        <table>
+          <thead><tr><th>Q#</th><th>Question</th><th>Listen for</th></tr></thead>
+          <tbody>
+            <tr><td>Q1</td><td>Walk me through what happens when a complex commercial file lands — from order open to commitment draft.</td><td>Bottlenecks; who owns exam; TAT</td></tr>
+            <tr><td>Q2</td><td>What TPS do you use? Do you use SoftPro 360 for searches — DataTrace, Pippin, others?</td><td>ICP fit; integration path</td></tr>
+            <tr><td>Q3</td><td>How many commercial files per month? What % would you call “complex” (11+ docs, entity vesting, easements)?</td><td>Volume signal for pilot</td></tr>
+            <tr><td>Q4</td><td>Who examines commercial in-house vs sends out? What's the trigger to outsource?</td><td>Overflow behavior — V1</td></tr>
+            <tr><td>Q5</td><td>Roughly how many staff hours on your hardest commercial files?</td><td>V5 economics — compare to 10–18 hr estimate</td></tr>
+            <tr><td>Q6</td><td>What do you pay external vendors today — per file or hourly? Search only or commitment draft?</td><td>V3 pricing anchor</td></tr>
+            <tr><td>Q7</td><td>Which counties do most commercial files land in? Fully digital retrieval or still in-person?</td><td>Launch state / county — §6.6</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Section B — Pain &amp; prior vendors (5 min)</h3>
+        <table>
+          <thead><tr><th>Q#</th><th>Question</th><th>Listen for</th></tr></thead>
+          <tbody>
+            <tr><td>Q8</td><td>Have you used offshore bureaus (HitechDigital, India LPO) or domestic search vendors (Pippin)? What worked / didn't?</td><td>Vendor satisfaction; quality bar</td></tr>
+            <tr><td>Q9</td><td>Biggest frustration with external exam support on commercial?</td><td>TAT, format, audit trail, communication</td></tr>
+            <tr><td>Q10</td><td>Would you forward DataTrace plant PDFs from your SoftPro file to an external examiner, or expect them to source independently?</td><td>Phase 5 integration default</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Section C — Underwriter &amp; compliance (5 min)</h3>
+        <table>
+          <thead><tr><th>Q#</th><th>Question</th><th>Listen for</th></tr></thead>
+          <tbody>
+            <tr><td>Q11</td><td>Primary underwriter(s) for commercial? Any underwriter-specific commitment templates?</td><td>Template onboarding scope</td></tr>
+            <tr><td>Q12</td><td>Does your underwriter allow vendor-prepared examination work papers if your licensed examiner approves?</td><td>V2 — hard yes/no</td></tr>
+            <tr><td>Q13</td><td>Ever had underwriter push back on outsourced or AI-assisted exam support? What was the issue?</td><td>Blocker patterns</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Section D — Concept test (8 min)</h3>
+        <p>Read concept statement once — do not demo product.</p>
+        <blockquote class="locked">
+          <strong>Concept statement:</strong> “Managed examination bureau for commercial complex files on SoftPro. You send us the order spec and optionally your DataTrace plant package. We deliver a commitment-ready draft — Schedules A/B/C, abstract, audit trail linking every requirement to source docs — within 3 business days. Your licensed examiner reviews and approves before anything goes to underwriter. Outcome-priced at roughly $200 per file, one revision round included. We never touch your SoftPro login in the pilot — you import the PDF.”
+        </blockquote>
+        <table>
+          <thead><tr><th>Q#</th><th>Question</th><th>Listen for</th></tr></thead>
+          <tbody>
+            <tr><td>Q14</td><td>On a 1–5 scale, how interested would you be in trying this on 1–3 pilot files?</td><td>1=not at all, 5=very — V1</td></tr>
+            <tr><td>Q15</td><td>At $199 per T1 file (single parcel, 11–30 docs, 3-day SLA), is that fair, cheap, or expensive vs what you pay today?</td><td>V3 — record verbatim</td></tr>
+            <tr><td>Q16</td><td>What price would feel “too cheap to trust” for commercial exam?</td><td>Floor perception</td></tr>
+            <tr><td>Q17</td><td>Per-file outcome pricing vs hourly LPO quote — which do you prefer and why?</td><td>Pricing model fit</td></tr>
+            <tr><td>Q18</td><td>Are you evaluating or using AI title tools (Zaito, TitleTrackr, others)? Paid or pilot only?</td><td>V4 proxy</td></tr>
+            <tr><td>Q19</td><td>What would make you NOT use an external bureau — even if price were right?</td><td>Objection inventory</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Section E — Close &amp; next steps (5 min)</h3>
+        <table>
+          <thead><tr><th>Q#</th><th>Question / action</th></tr></thead>
+          <tbody>
+            <tr><td>Q20</td><td>Would you be open to a follow-up if we launch a pilot — 3 files at $149 each, full SLA?</td></tr>
+            <tr><td>Q21</td><td>Could you share a redacted closed commercial file for format alignment? (NDA offered)</td></tr>
+            <tr><td>—</td><td>Ask for referral to another SoftPro agency if not a fit</td></tr>
+            <tr><td>—</td><td>Send thank-you + aggregated research summary within 1 week</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="p6-gates">
+        <h2>6.5 Go/No-Go Gates</h2>
+        <p>Three decision points. All thresholds are minimums — exceeding them strengthens conviction but is not required beyond Gate 1 pass.</p>
+
+        <h3>Gate 1 — Post-discovery (before S0 build)</h3>
+        <p><strong>Decision owner:</strong> Founder. <strong>Input:</strong> 5+ completed scored interviews.</p>
+        <table>
+          <thead><tr><th>#</th><th>Criterion</th><th>Pass</th><th>Fail → action</th></tr></thead>
+          <tbody>
+            <tr><td>G1.1</td><td>Interviews completed (ICP-qualified)</td><td>≥5</td><td>Extend outreach 2 weeks</td></tr>
+            <tr><td>G1.2</td><td>Pilot interest (Q14 ≥4)</td><td>≥3 agencies</td><td>Refine concept; re-test pricing</td></tr>
+            <tr><td>G1.3</td><td>Price acceptance ($199 fair or cheap)</td><td>≥2 agencies</td><td>Test $249; or reduce scope to search+abstract only</td></tr>
+            <tr><td>G1.4</td><td>Underwriter hard blocker</td><td>Zero cited</td><td>Underwriter pre-clearance call before build</td></tr>
+            <tr><td>G1.5</td><td>DataTrace handoff acceptable</td><td>≥2 agencies</td><td>Plan bureau-sourced plant (higher cost)</td></tr>
+            <tr><td>G1.6</td><td>Design partner candidate</td><td>≥1 agency Q14=5 + willing to share sample file</td><td>Continue search; delay build 2 weeks max</td></tr>
+          </tbody>
+        </table>
+        <blockquote class="final-spec">
+          <strong>Gate 1 rule:</strong> Proceed to build if G1.1 + G1.2 + G1.3 pass AND G1.4 passes. G1.5 and G1.6 are strong signals but not blockers — manual plant sourcing and extended partner search are acceptable with documented risk.
+        </blockquote>
+
+        <h3>Gate 2 — Design partner LOI (before pilot file #1)</h3>
+        <table>
+          <thead><tr><th>#</th><th>Criterion</th><th>Pass</th></tr></thead>
+          <tbody>
+            <tr><td>G2.1</td><td>Signed LOI or MSA for 3–5 pilot files</td><td>1 agency minimum</td></tr>
+            <tr><td>G2.2</td><td>Underwriter commitment template collected</td><td>Stewart / FNF / West / etc. — agency's primary</td></tr>
+            <tr><td>G2.3</td><td>Launch state + county locked</td><td>See §6.6</td></tr>
+            <tr><td>G2.4</td><td>NDA + E&amp;O cert exchange complete</td><td>Per Phase 3 onboarding</td></tr>
+            <tr><td>G2.5</td><td>Agency examiner identified for approval gate</td><td>Named contact + email</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Gate 3 — Post-pilot (before scale / Sync application)</h3>
+        <p>Reuses Phase 4 acceptance criteria — measured on 3–5 pilot files.</p>
+        <table>
+          <thead><tr><th>Metric</th><th>Target</th><th>Fail → action</th></tr></thead>
+          <tbody>
+            <tr><td>Examiner first-pass approval rate</td><td>≥60%</td><td>Template + QA process iteration</td></tr>
+            <tr><td>Material error rate</td><td>&lt;5%</td><td>Halt scale; root-cause audit trail gaps</td></tr>
+            <tr><td>Examiner review time (median)</td><td>≤4 hours</td><td>Improve JSON sidecar / import helper (I1)</td></tr>
+            <tr><td>SLA hit rate</td><td>≥90%</td><td>Reduce intake scope or add bureau capacity</td></tr>
+            <tr><td>Re-order commitment</td><td>≥1 agency commits 5+ files/month</td><td>Pricing or quality pivot</td></tr>
+            <tr><td>Underwriter rejection (bureau-attributable)</td><td>0 within 30 days</td><td>Underwriter compliance review</td></tr>
+          </tbody>
+        </table>
+
+        <div class="chart-card">
+          <h4>Gate 1 Pass Rate — Minimum Thresholds</h4>
+          <div class="chart-wrap">
+            <canvas id="chartValidationGates"></canvas>
+          </div>
+          <p style="font-size:0.78rem;margin-top:0.5rem;">Required minimums out of 5 interviews. Actual results to be filled post-calls.</p>
+        </div>
+      </section>
+
+      <section id="p6-launchstate">
+        <h2>6.6 Launch State Selection — TX vs FL</h2>
+        <p>Phase 4 deferred launch state to validation. Compare candidates using agency geography from calls + objective digitization signals.</p>
+
+        <table>
+          <thead><tr><th>Factor</th><th>Texas (TX)</th><th>Florida (FL)</th><th>Weight</th></tr></thead>
+          <tbody>
+            <tr><td>Agency density (independent SoftPro)</td><td>High — large commercial market</td><td>High — growth + refi/commercial mix</td><td>High</td></tr>
+            <tr><td>DataTrace plant coverage</td><td>Strong statewide</td><td>Strong — TaxSource + regional</td><td>High</td></tr>
+            <tr><td>County API availability</td><td>Variable; Harris/Dallas digitized</td><td>Variable; some clerk APIs</td><td>Medium</td></tr>
+            <tr><td>Commercial file volume (agency reports)</td><td><em>TBD from calls</em></td><td><em>TBD from calls</em></td><td>High</td></tr>
+            <tr><td>Design partner location</td><td><em>TBD</em></td><td><em>TBD</em></td><td>Deciding</td></tr>
+            <tr><td>Regulatory complexity</td><td>Moderate</td><td>Moderate — DOC oversight</td><td>Low</td></tr>
+            <tr><td>Judgment / UCC search digitization</td><td>SOS + county mix</td><td>Sunbiz + county</td><td>Medium</td></tr>
+          </tbody>
+        </table>
+
+        <h3>County lock criteria (within chosen state)</h3>
+        <ul class="checklist">
+          <li>Design partner does ≥2 commercial files/month in target county</li>
+          <li>DataTrace TPS returns ≥90% of instruments digitally for typical T1 chain</li>
+          <li>County recorder has online index (API preferred — enables I4 connector)</li>
+          <li>No known ALTA survey flag for &gt;40% in-person retrieval in that county</li>
+        </ul>
+
+        <blockquote class="locked">
+          <strong>Decision rule:</strong> Lock state where design partner LOI (G2.1) is signed. If multiple candidates, prefer county with highest design-partner volume + digitization score. Do not build S1 search pipeline until G2.3 closes.
+        </blockquote>
+      </section>
+
+      <section id="p6-scoring">
+        <h2>6.7 Interview Scoring Rubric</h2>
+        <p>Score each call immediately after. Aggregate for Gate 1 decision memo.</p>
+
+        <table>
+          <thead><tr><th>Field</th><th>Scale / values</th><th>Maps to</th></tr></thead>
+          <tbody>
+            <tr><td>Agency ID</td><td>Anonymized code (A01–A10)</td><td>—</td></tr>
+            <tr><td>ICP fit score</td><td>0–6 (screening criteria met)</td><td>Include if ≥4</td></tr>
+            <tr><td>Commercial files/month</td><td>Number</td><td>Volume</td></tr>
+            <tr><td>Complex file hours (self-reported)</td><td>Number</td><td>V5</td></tr>
+            <tr><td>Current outsource spend</td><td>$ per file or $/hr</td><td>V3 anchor</td></tr>
+            <tr><td>Pilot interest (Q14)</td><td>1–5</td><td>G1.2</td></tr>
+            <tr><td>Price reaction $199 (Q15)</td><td>cheap / fair / expensive / too cheap to trust</td><td>G1.3</td></tr>
+            <tr><td>Underwriter blocker (Q12–13)</td><td>yes / no / unclear</td><td>G1.4</td></tr>
+            <tr><td>DataTrace forward OK (Q10)</td><td>yes / no / already do</td><td>G1.5</td></tr>
+            <tr><td>Design partner candidate</td><td>yes / maybe / no</td><td>G1.6</td></tr>
+            <tr><td>Primary underwriter</td><td>Name</td><td>Template prep</td></tr>
+            <tr><td>Top counties</td><td>List</td><td>§6.6</td></tr>
+            <tr><td>Key objection</td><td>Free text</td><td>Product iteration</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Sample scoring row</h3>
+        <table>
+          <thead><tr><th>Agency</th><th>ICP</th><th>Comm/mo</th><th>Q14</th><th>$199</th><th>UW block</th><th>Partner?</th></tr></thead>
+          <tbody>
+            <tr><td>A01</td><td>5/6</td><td>12</td><td>5</td><td>fair</td><td>no</td><td class="verdict-pass">yes</td></tr>
+            <tr><td>A02</td><td>4/6</td><td>6</td><td>3</td><td>expensive</td><td>no</td><td>no</td></tr>
+            <tr><td>A03</td><td>6/6</td><td>20</td><td>4</td><td>cheap</td><td>unclear</td><td>maybe</td></tr>
+            <tr><td colspan="7" style="color:var(--muted);font-size:0.85rem;"><em>Fill remaining rows post-interviews — template only</em></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Phase 6 conclusions → Build decision</h3>
+        <ul class="checklist">
+          <li class="done">5 open hypotheses mapped to 21 interview questions with pass thresholds</li>
+          <li class="done">Recruitment plan: 8–12 outreach → 5–10 qualified calls; ICP screen ≥4/6</li>
+          <li class="done">Three-tier go/no-go: Gate 1 (post-discovery), Gate 2 (LOI), Gate 3 (pilot metrics)</li>
+          <li class="done">Launch state decision rule: follow design partner geography + digitization score</li>
+          <li class="done">Scoring rubric ready — aggregate for Gate 1 memo after W2</li>
+          <li>Product research desk phase complete — next action is outreach + calls, not more research</li>
+        </ul>
+
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart LR
+    PR[Product Research Ph 0-6] --> OUT[Outreach W1]
+    OUT --> INT[Interviews W2]
+    INT --> G1[Gate 1 Memo W3]
+    G1 -->|Pass| LOI[LOI + G2 W4]
+    G1 -->|Fail| PIV[Pivot decision]
+    LOI --> BUILD[S0-S4 Build]
+    BUILD --> PIL[Pilot G3]
+    PIL -->|Pass| SCALE[Scale]
+    style PR fill:#064e3b,stroke:#10b981,color:#e8edf4
+          </pre>
+        </div>
+      </section>
+
+      <section id="bibliography" class="biblio">
+        <h2>Bibliography</h2>
+        <h4>Phase 0 — Pre-flight</h4>
+        <ul>
+          <li><a href="research-process.html">Market Research Process</a></li>
+          <li><a href="https://zaito.ai/" target="_blank">Zaito</a> · <a href="https://www.housingwire.com/articles/qualia-ceo-nate-baker-ai-is-as-significant-as-language-and-fire/" target="_blank">Qualia Clear 2.0</a></li>
+          <li><a href="https://www.alta.org/file/Measuring-the-Complexity-of-Title-Production-Survey-Summary.pdf" target="_blank">ALTA Complexity Study (2026 summary)</a></li>
+        </ul>
+        <h4>Phase 1 — Workflow map</h4>
+        <ul>
+          <li><a href="https://www.alta.org/file/Measuring-the-Complexity-of-Title-Production.pdf" target="_blank">ALTA — Measuring Complexity (full report)</a></li>
+          <li><a href="https://www.alta.org/file/ALTA-CFPB-Mortgage-Closing-Costs" target="_blank">ALTA — CFPB Mortgage Closing Costs (22/45 hr citation)</a></li>
+          <li><a href="https://www.alta.org/business-operations/research-initiatives-and-resources/critical-issue-studies/title-insurance-curative-work-study" target="_blank">ALTA Curative Work Study</a></li>
+          <li><a href="https://softprocorp.com/commercial/" target="_blank">SoftPro Commercial capabilities</a></li>
+          <li><a href="https://blog.softprocorp.com/dealing-with-commercial-closings-ditch-your-excel" target="_blank">SoftPro — Commercial closings blog</a></li>
+          <li><a href="https://softprocorp.com/automation/" target="_blank">SoftPro Automation</a></li>
+          <li><a href="https://softprocorp.com/real-estate-software-solutions/softpro-360-data-integration/" target="_blank">SoftPro 360 integrations (DataTrace, Pippin)</a></li>
+          <li><a href="https://blog.softprocorp.com/introducing-datatrace-integration-in-softpro-360" target="_blank">DataTrace × SoftPro 360</a></li>
+          <li><a href="https://www.stewart.com/-/media/files/stewartdotcom/pdfs/states/new-jersey/seminar-materials/n2kunderstandingthetitlecommitmentandsearchandexaminformation.pdf" target="_blank">Stewart — Title commitment schedules</a></li>
+          <li><a href="https://careers.firstam.com/job/kansas-city/commercial-title-examiner-ks-mo-remote/39054/94224818528" target="_blank">First American — Commercial examiner JD</a></li>
+          <li><a href="https://www.hitechdigital.com/title-production-services" target="_blank">HitechDigital — Title production bureau workflow</a></li>
+          <li><a href="https://www.pippintitle.com/blog/guide-commercial-title-search/" target="_blank">Pippin Title — Commercial search guide</a></li>
+          <li><a href="https://www.hitechi2i.com/guide/title-search-turnaround-time-benchmarks/" target="_blank">Hitech i2i — TAT benchmarks</a></li>
+        </ul>
+        <h4>Phase 2 — Competitor teardown</h4>
+        <ul>
+          <li><a href="https://zaito.ai/platform" target="_blank">Zaito Zai-XM Platform</a> · <a href="https://zaito.ai/faq" target="_blank">Zaito FAQ</a> · <a href="https://zaito.ai/contact-us" target="_blank">Zaito pilot</a></li>
+          <li><a href="https://www.hitechdigital.com/title-production-services" target="_blank">HitechDigital — Title production bureau</a></li>
+          <li><a href="https://www.hitechbpo.com/title-search-support-services.php" target="_blank">Hitech BPO — Search + commitment prep</a></li>
+          <li><a href="https://www.habiledata.com/title-search-services-outsourcing.php" target="_blank">HabileData — Title search outsourcing</a></li>
+          <li><a href="https://titletrackr.com/" target="_blank">TitleTrackr</a> · <a href="https://blog.titletrackr.com/2026/01/02/titletrackr-unveils-search-agents-the-first-autonomous-ai-title-search-technology-transforming-the-title-industry/" target="_blank">Search Agents launch</a></li>
+          <li><a href="https://www.pippintitle.com/integrations/title-search-softpro/" target="_blank">Pippin Title × SoftPro 360</a></li>
+          <li><a href="https://neuskale.com/pricing" target="_blank">Neuskale — Public pricing</a></li>
+          <li><a href="https://www.insigniaresource.com/research/outsourcing-rates-by-country/" target="_blank">Insignia — Offshore rate benchmarks 2026</a></li>
+          <li><a href="https://www.housingwire.com/articles/rezelink-ai-platform-aims-to-accelerate-title-search-workflows/" target="_blank">RezeLink × SoftPro (HousingWire)</a></li>
+          <li><a href="https://www.qualia.com/pricing/" target="_blank">Qualia Clear pricing page</a> · <a href="https://www.getapp.com/finance-accounting-software/a/qualia/pricing/" target="_blank">Qualia ~$3,599/yr listing</a></li>
+          <li><a href="https://www.alta.org/marketplace/results" target="_blank">ALTA Marketplace — HDEP International</a></li>
+        </ul>
+        <h4>Phase 3 — Service blueprint</h4>
+        <ul>
+          <li><a href="https://content.naic.org/sites/default/files/model-law-628.pdf" target="_blank">NAIC Title Insurers Model Act — agent duties §15</a></li>
+          <li><a href="https://www.alta.org/file/2024-DC-TIRS-State-Compliance-Guide.pdf" target="_blank">ALTA TIRS State Compliance Guide</a></li>
+          <li><a href="https://www.alta.org/press/NAIC_Market_Conduct.pdf" target="_blank">NAIC Market Conduct — underwriting file review</a></li>
+          <li><a href="https://www.myfloridocfo.com/division/agents/compliance/title-insurance-agencies" target="_blank">Florida CFO — agency vendor responsibility</a></li>
+          <li><a href="https://www.lawinsider.com/clause/errors-or-omissions-in-any-commitment" target="_blank">Chicago Title agency contract — subcontractor liability</a></li>
+          <li><a href="https://indecomm.com/solutions/title-services/" target="_blank">Indecomm — 24/48 hr SLA benchmark</a></li>
+          <li><a href="https://www.ntitlesolutions.com/why-service-turnaround-times-matter/" target="_blank">ntitle — 48 hr SLA model</a></li>
+          <li><a href="https://zaito.ai/blog" target="_blank">Zaito blog — audit trail / E&amp;O framing</a></li>
+          <li><a href="https://www.cio.com/article/274740/outsourcing-sla-definitions-and-solutions.html" target="_blank">CIO — SLA best practices</a></li>
+        </ul>
+        <h4>Phase 4 — MVP spec</h4>
+        <ul>
+          <li>Synthesized from Phases 0–3 deliverables in this document</li>
+          <li><a href="research-process.html">Market Research</a> — $100–300 price hypothesis, FinCEN wage</li>
+        </ul>
+        <h4>Phase 5 — Integration map</h4>
+        <ul>
+          <li><a href="https://softprocorp.com/real-estate-software-solutions/softpro-360-data-integration/" target="_blank">SoftPro 360 integrations</a> · <a href="https://info.softprocorp.com/hubfs/Sync%20User%20Guide%20-%20Title%20Provider%20v1.0.pdf" target="_blank">Sync Title Provider User Guide v1.0</a></li>
+          <li><a href="https://blog.softprocorp.com/introducing-softpro-sync-integration-in-softpro-360" target="_blank">SoftPro Sync announcement</a> · <a href="https://blog.softprocorp.com/introducing-datatrace-integration-in-softpro-360" target="_blank">DataTrace × SoftPro 360</a></li>
+          <li><a href="https://www.datatracetitle.com/data-integration/datatrace-digital-gateway/" target="_blank">DataTrace Digital Gateway</a> · <a href="https://www.datatracetitle.com/blog/datatrace-softpro-technology-integration" target="_blank">DataTrace end-to-end SoftPro integration</a></li>
+          <li><a href="https://www.pippintitle.com/integrations/title-search-softpro/" target="_blank">Pippin Title × SoftPro (reference pattern)</a></li>
+          <li><a href="https://pythonic.ai/county-records-retrieval" target="_blank">Pythonic — county records retrieval</a></li>
+          <li><a href="https://webserver1.okcountyrecords.com/api/v1/documentation" target="_blank">OKCountyRecords API</a> · <a href="https://arcountyrecords.com/api/v1/documentation/search" target="_blank">ARCountyRecords API</a></li>
+          <li><a href="https://softprocorp.com/software-services/custom-reports-and-docs" target="_blank">SoftPro custom docs / ProDesign</a></li>
+        </ul>
+        <h4>Phase 6 — Validation plan</h4>
+        <ul>
+          <li>Synthesized from Phases 0–5 open validations and MVP acceptance criteria in this document</li>
+          <li><a href="https://www.alta.org/" target="_blank">ALTA — agency directory / marketplace</a></li>
+          <li><a href="https://softprocorp.com/" target="_blank">SoftPro — user community (LIVE, forums)</a></li>
+          <li><a href="https://www.myfloridocfo.com/division/agents/compliance/title-insurance-agencies" target="_blank">Florida CFO — agency compliance (vendor oversight reference)</a></li>
+          <li><a href="https://www.tdi.texas.gov/" target="_blank">Texas DOI — title agent resources</a></li>
+        </ul>
+        <p style="margin-top:2rem;font-size:0.8rem;color:var(--muted);">Phase 0 completed June 21, 2026. Phases 1–6 completed June 22, 2026. Product research desk phase complete — validation calls are the next action.</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { primaryColor: '#1a2332', primaryTextColor: '#e8edf4', primaryBorderColor: '#2d3a4f', lineColor: '#3b82f6' } });
+
+    Chart.defaults.color = '#8b9cb3';
+    Chart.defaults.font.family = 'IBM Plex Sans, system-ui, sans-serif';
+
+    const colors = { green: '#10b981', blue: '#3b82f6', red: '#ef4444', amber: '#f59e0b', slate: '#64748b', purple: '#8b5cf6' };
+
+    new Chart(document.getElementById('chartWedgeOverlap'), {
+      type: 'radar',
+      data: {
+        labels: ['Commercial files', 'Managed bureau', 'SoftPro focus', 'Outcome pricing', 'US geo', 'Low Zaito overlap'],
+        datasets: [
+          { label: 'Our wedge (locked)', data: [95, 90, 85, 90, 100, 85], backgroundColor: 'rgba(16,185,129,0.2)', borderColor: colors.green, pointBackgroundColor: colors.green },
+          { label: 'Zaito (public)', data: [30, 40, 70, 85, 90, 20], backgroundColor: 'rgba(59,130,246,0.15)', borderColor: colors.blue, pointBackgroundColor: colors.blue }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, max: 100, grid: { color: 'rgba(45,58,79,0.6)' } } } }
+    });
+
+    new Chart(document.getElementById('chartALTADocs'), {
+      type: 'bar',
+      data: {
+        labels: ['11+ docs (82%)', '50+ docs (21%)', '3–5 curative issues (60%)', 'Beyond std underwriting (44%)'],
+        datasets: [{ label: '% of transactions', data: [82, 21, 60, 44], backgroundColor: [colors.blue, colors.green, colors.amber, colors.red], borderRadius: 4 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(45,58,79,0.6)' } }, x: { grid: { display: false } } } }
+    });
+
+    new Chart(document.getElementById('chartTotalHours'), {
+      type: 'bar',
+      data: {
+        labels: ['Standard file', 'Difficult file'],
+        datasets: [{ label: 'Staff hours', data: [22, 45], backgroundColor: [colors.blue, colors.red], borderRadius: 4 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 50, title: { display: true, text: 'Hours' }, grid: { color: 'rgba(45,58,79,0.6)' } } } }
+    });
+
+    new Chart(document.getElementById('chartClosingHours'), {
+      type: 'bar',
+      data: {
+        labels: ['Clear title', 'Lender coord.', 'Non-curative', 'Prep docs', 'Signing', 'Processing', 'Funding'],
+        datasets: [{ label: 'Hours (difficult file)', data: [7.8, 5.5, 4.4, 3.4, 2.4, 2.7, 2.4], backgroundColor: colors.amber, borderRadius: 4 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, grid: { color: 'rgba(45,58,79,0.6)' } } } }
+    });
+
+    new Chart(document.getElementById('chartHourAlloc'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Bureau — search/exam/draft (est.)', 'Agency examiner review (est.)', 'Agency — curative + closing + policy'],
+        datasets: [{ data: [14, 3, 28], backgroundColor: [colors.green, colors.blue, colors.amber], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+    });
+
+    new Chart(document.getElementById('chartPricing'), {
+      type: 'bar',
+      data: {
+        labels: ['Neuskale (simple)', 'Offshore est.', 'Our target', 'Hitech bureau est.', 'Pippin search est.'],
+        datasets: [{
+          label: 'Est. midpoint ($/file)',
+          data: [22, 120, 200, 160, 300],
+          backgroundColor: [colors.slate, colors.slate, colors.green, colors.amber, colors.blue],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { afterLabel: () => 'In-house labor ref: ~$3,165/file (45 hrs)' } }
+        },
+        scales: { x: { beginAtZero: true, ticks: { callback: v => '$' + v }, grid: { color: 'rgba(45,58,79,0.6)' } } }
+      }
+    });
+
+    new Chart(document.getElementById('chartMoat'), {
+      type: 'radar',
+      data: {
+        labels: ['Commercial focus', 'Full commitment draft', 'AI audit trail', 'SoftPro fit', 'Outcome pricing', 'Low Zaito overlap'],
+        datasets: [
+          { label: 'Our wedge (target)', data: [95, 90, 90, 85, 88, 80], backgroundColor: 'rgba(16,185,129,0.2)', borderColor: colors.green, pointBackgroundColor: colors.green },
+          { label: 'HitechDigital bureau', data: [80, 85, 40, 50, 60, 70], backgroundColor: 'rgba(139,156,179,0.15)', borderColor: colors.slate, pointBackgroundColor: colors.slate },
+          { label: 'Zaito', data: [25, 45, 85, 75, 80, 20], backgroundColor: 'rgba(59,130,246,0.15)', borderColor: colors.blue, pointBackgroundColor: colors.blue }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, scales: { r: { beginAtZero: true, max: 100, grid: { color: 'rgba(45,58,79,0.6)' } } } }
+    });
+
+    new Chart(document.getElementById('chartSLA'), {
+      type: 'bar',
+      data: {
+        labels: ['T1 — single parcel', 'T2 — multi-parcel', 'T3 — complex', 'Rush (T1)'],
+        datasets: [{ label: 'Business days', data: [3, 5, 8.5, 1.5], backgroundColor: [colors.green, colors.blue, colors.amber, colors.red], borderRadius: 4 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'Business days' }, grid: { color: 'rgba(45,58,79,0.6)' } } }
+      }
+    });
+
+    new Chart(document.getElementById('chartUnitEconMVP'), {
+      type: 'bar',
+      data: {
+        labels: ['Price (revenue)', 'Est. cost (pilot)', 'Gross margin'],
+        datasets: [{
+          label: 'USD per T1 file',
+          data: [199, 70, 129],
+          backgroundColor: [colors.green, colors.red, colors.blue],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v }, grid: { color: 'rgba(45,58,79,0.6)' } } }
+      }
+    });
+
+    new Chart(document.getElementById('chartDataPlant'), {
+      type: 'doughnut',
+      data: {
+        labels: ['DataTrace TPS (plant)', 'County API direct', 'AI county retrieval', 'Manual / ground search'],
+        datasets: [{ data: [75, 10, 8, 7], backgroundColor: [colors.green, colors.blue, colors.purple, colors.amber], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+    });
+
+    new Chart(document.getElementById('chartIntegrationMaturity'), {
+      type: 'line',
+      data: {
+        labels: ['v1 Package handoff', 'v1.5 Import helper', 'v2 Sync provider', 'v3 360 vendor'],
+        datasets: [{
+          label: 'Examiner import time (min)',
+          data: [55, 35, 15, 5],
+          borderColor: colors.green,
+          backgroundColor: 'rgba(16,185,129,0.15)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: colors.green
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, reverse: true, title: { display: true, text: 'Minutes (lower = better)' }, grid: { color: 'rgba(45,58,79,0.6)' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+
+    new Chart(document.getElementById('chartValidationGates'), {
+      type: 'bar',
+      data: {
+        labels: ['Pilot interest (≥4)', 'Price OK ($199)', 'DataTrace OK', 'Design partner', 'Min interviews'],
+        datasets: [
+          { label: 'Pass threshold (of 5)', data: [3, 2, 2, 1, 5], backgroundColor: colors.green, borderRadius: 4 },
+          { label: 'Results (fill post-calls)', data: [0, 0, 0, 0, 0], backgroundColor: colors.slate, borderRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, max: 5, ticks: { stepSize: 1 }, grid: { color: 'rgba(45,58,79,0.6)' } } }
+      }
+    });
+  </script>
+</body>
+</html>

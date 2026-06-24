@@ -1,0 +1,12 @@
+gate_criterion,threshold,actual,pass,notes
+G1.1_interviews_completed_icp_qualified,≥5,,,Count rows where qualified_for_gate=yes
+G1.2_pilot_interest_q14_gte_4,≥3 agencies,,,Count q14_pilot_interest ≥4
+G1.3_price_199_fair_or_cheap,≥2 agencies,,,Count q15_price_199 = fair or cheap
+G1.4_underwriter_hard_blocker,0 cited,,,Any underwriter_blocker_hard=yes fails
+G1.5_datatrace_forward_ok,≥2 agencies,,,Strong signal; not required to proceed
+G1.6_design_partner_candidate,≥1 Q14=5 + sample file,,,Strong signal; not required to proceed
+gate_1_proceed_to_build,G1.1+G1.2+G1.3+G1.4 all pass,,,Founder decision memo W3
+top_followup_candidate_1,A__,,,
+top_followup_candidate_2,A__,,,
+top_followup_candidate_3,A__,,,
+decision_memo_date,YYYY-MM-DD,,,

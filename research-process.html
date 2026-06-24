@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Market Research Process — YC Trends to Title & Settlement Wedge</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface2: #243044;
+      --border: #2d3a4f;
+      --text: #e8edf4;
+      --muted: #8b9cb3;
+      --accent: #3b82f6;
+      --accent2: #10b981;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --selected: #10b981;
+      --eliminated: #ef4444;
+      --font: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+    }
+    nav h2 {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    nav ul { list-style: none; }
+    nav li { margin-bottom: 0.35rem; }
+    nav a {
+      display: block;
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    nav a:hover { background: var(--surface2); color: var(--text); text-decoration: none; }
+    main { padding: 2rem 2.5rem 4rem; width: 100%; }
+    header.doc-header {
+      margin-bottom: 2.5rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    header.doc-header h1 {
+      font-size: 1.85rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    header.doc-header .lead { color: var(--muted); max-width: 720px; }
+    .meta-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.25rem; }
+    .pill {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    section { margin-bottom: 3rem; scroll-margin-top: 1.5rem; }
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    h3 { font-size: 1.05rem; margin: 1.5rem 0 0.75rem; color: var(--text); }
+    h4 { font-size: 0.9rem; margin: 1rem 0 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    p { margin-bottom: 0.75rem; color: var(--muted); }
+    p strong, li strong { color: var(--text); }
+    ul.constraints { margin: 0.75rem 0 1rem 1.25rem; color: var(--muted); }
+    ul.constraints li { margin-bottom: 0.35rem; }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin: 1.25rem 0;
+    }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+    }
+    .kpi .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .kpi .value { font-size: 1.5rem; font-weight: 600; margin: 0.25rem 0; }
+    .kpi .sub { font-size: 0.78rem; color: var(--muted); }
+    .kpi.selected { border-color: var(--selected); }
+    .kpi.selected .value { color: var(--selected); }
+    .kpi.danger .value { color: var(--danger); }
+    .kpi.warn .value { color: var(--warn); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin: 1rem 0;
+      background: var(--surface);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    th, td {
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: var(--surface2);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(59, 130, 246, 0.04); }
+    .verdict-eliminated { color: var(--eliminated); font-weight: 600; }
+    .verdict-pass { color: var(--selected); font-weight: 600; }
+    .verdict-warn { color: var(--warn); font-weight: 600; }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin: 1.25rem 0;
+    }
+    .chart-card h4 { margin-top: 0; margin-bottom: 0.75rem; }
+    .chart-wrap { position: relative; height: 320px; }
+    .chart-wrap.tall { height: 420px; }
+    .chart-wrap.short { height: 260px; }
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+    .mermaid-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 1.25rem 0;
+      overflow-x: auto;
+    }
+    .mermaid { display: flex; justify-content: center; }
+    /* Timeline gantt — use full content width, not a centered narrow SVG */
+    #timeline .mermaid-wrap {
+      width: 100%;
+      padding: 1.5rem 1rem 2rem;
+    }
+    #timeline .mermaid {
+      display: block;
+      width: 100%;
+    }
+    #timeline .mermaid svg {
+      width: 100% !important;
+      max-width: 100% !important;
+      height: auto !important;
+    }
+    blockquote.final-spec {
+      border-left: 3px solid var(--selected);
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      background: rgba(16, 185, 129, 0.08);
+      border-radius: 0 8px 8px 0;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    code, .formula {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      background: var(--surface2);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+    .formula-block {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 0.75rem 0;
+    }
+    .biblio ul { list-style: none; margin: 0.5rem 0 1.5rem; }
+    .biblio li { margin-bottom: 0.3rem; font-size: 0.85rem; color: var(--muted); }
+    .biblio h4 { margin-top: 1.25rem; }
+    .checklist { list-style: none; margin: 0.75rem 0; }
+    .checklist li {
+      padding: 0.4rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--muted);
+    }
+    .checklist li::before {
+      content: "☐";
+      position: absolute;
+      left: 0;
+      color: var(--warn);
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: relative; height: auto; }
+      main { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav>
+      <h2>Contents</h2>
+      <ul>
+        <li><a href="#phase0">Phase 0 — Starting Thesis</a></li>
+        <li><a href="#summary">Executive Summary</a></li>
+        <li><a href="#methodology">Methodology</a></li>
+        <li><a href="#funnel">Research Funnel</a></li>
+        <li><a href="#stack">Stack Migration</a></li>
+        <li><a href="#phase1">Phase 1 — YC Batch</a></li>
+        <li><a href="#phase2">Phase 2 — Glean Alt</a></li>
+        <li><a href="#phase3">Phase 3 — BRMS Kill</a></li>
+        <li><a href="#phase4">Phase 4 — MCP Infra</a></li>
+        <li><a href="#phase5">Phase 5 — Stack Shift</a></li>
+        <li><a href="#phase6">Phase 6 — YC Verticals</a></li>
+        <li><a href="#phase7">Phase 7 — 22-Category Scan</a></li>
+        <li><a href="#phase8">Phase 8 — Title Stress-Test</a></li>
+        <li><a href="#phase9">Phase 9 — Title vs Utility</a></li>
+        <li><a href="#phase10">Phase 10 — Zaito Window</a></li>
+        <li><a href="#dashboard">Master Dashboard</a></li>
+        <li><a href="#timeline">Timeline</a></li>
+        <li><a href="#risks">Risks</a></li>
+        <li><a href="#bibliography">Bibliography</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <header class="doc-header">
+        <h1>Market Research Process</h1>
+        <p class="lead">From YC Trends to Title &amp; Settlement Wedge — a data-backed audit trail of every elimination and selection, with empirical metrics and visual analysis. June 2026.</p>
+        <div class="meta-pills">
+          <span class="pill">Global B2B</span>
+          <span class="pill">FDI Primary Filter</span>
+          <span class="pill">No Interviews</span>
+          <span class="pill">Nected Rule Applied</span>
+        </div>
+      </header>
+
+      <!-- EXECUTIVE SUMMARY -->
+      <section id="summary">
+        <h2>Executive Summary</h2>
+        <div class="kpi-grid">
+          <div class="kpi selected">
+            <div class="label">Selected Market</div>
+            <div class="value">$15.4B</div>
+            <div class="sub">Title &amp; settlement services</div>
+          </div>
+          <div class="kpi selected">
+            <div class="label">Funding Density (FDI)</div>
+            <div class="value">1.7%</div>
+            <div class="sub">$255M VC ÷ market</div>
+          </div>
+          <div class="kpi">
+            <div class="label">2026 YTD VC</div>
+            <div class="value">$190K</div>
+            <div class="sub">Capital flight signal</div>
+          </div>
+          <div class="kpi danger">
+            <div class="label">Ideas Eliminated</div>
+            <div class="value">28+</div>
+            <div class="sub">3 infra + 4 YC + 20 categories + utility</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Primary Competitor</div>
+            <div class="value">Zaito</div>
+            <div class="sub">$0 funding, exact wedge</div>
+          </div>
+          <div class="kpi warn">
+            <div class="label">Competitive Window</div>
+            <div class="value">~12 mo</div>
+            <div class="sub">Base case through mid-2027</div>
+          </div>
+        </div>
+
+        <table>
+          <thead><tr><th>Stage</th><th>Starting Point</th><th>Ending Point</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Market layer</strong></td><td>Generalized SaaS → niche agent-native software</td><td>AI-native <strong>service replacement</strong> (vertical labor), not infra</td></tr>
+            <tr><td><strong>Category</strong></td><td>YC Spring 2026 batch patterns</td><td>Title &amp; settlement — complex-file examination wedge</td></tr>
+            <tr><td><strong>Product</strong></td><td>Undefined</td><td>AI-native complex-file title search &amp; examination as managed service for independent agencies on non-Qualia stacks</td></tr>
+          </tbody>
+        </table>
+
+        <blockquote class="final-spec">
+          <strong>Final wedge:</strong> AI-native complex-file title search &amp; examination as a managed service for independent agencies on non-Qualia production systems (SoftPro, RamQuest, legacy). Outcome-priced per complex file (~$100–300). Human examiner at agency approves. Runs alongside existing TPS.
+        </blockquote>
+      </section>
+
+      <!-- METHODOLOGY -->
+      <section id="methodology">
+        <h2>Research Methodology</h2>
+        <p><strong>Actors:</strong> Founder (zero industry exposure, strong technical build ability) + AI research partner.</p>
+        <ul class="constraints">
+          <li>Global market analysis — including non-Western incumbents (the “Nected rule”)</li>
+          <li>Data-backed decisions only — no interviews, no whims</li>
+          <li>Primary filter: <strong>low funding density + no global incumbent</strong> on the wedge</li>
+          <li>Outsider-founder fit: <strong>tiebreaker only</strong>, not primary filter</li>
+          <li>Target: global, English-speaking B2B</li>
+        </ul>
+
+        <h3>Primary Metric: Funding Density Index (FDI)</h3>
+        <div class="formula-block">FDI = (Total documented category VC, ~10 years) ÷ (Annual service market size) × 100</div>
+        <p>Lower FDI = more service dollars per venture dollar = less contested.</p>
+
+        <h3>Signal Sources (Triangulation)</h3>
+        <table>
+          <thead><tr><th>Source</th><th>What it measures</th><th>Role</th></tr></thead>
+          <tbody>
+            <tr><td>YC batch composition (Spring 2026)</td><td>What got funded and built</td><td>Lagging trend signal</td></tr>
+            <tr><td>YC Requests for Startups (Summer 2026)</td><td>What investors ask for</td><td>Forward-looking gap hypotheses</td></tr>
+            <tr><td>Pricing / G2 segmentation</td><td>Structural buyer exclusion</td><td>Glean ~$60K/yr wall</td></tr>
+            <tr><td>Tracxn, press, LinkedIn</td><td>Saturation, FDI, global players</td><td>Elimination passes</td></tr>
+            <tr><td>Market size reports</td><td>TAM for FDI denominator</td><td>Category scoring</td></tr>
+            <tr><td>MCP 2026 roadmap</td><td>Named infra gaps</td><td>MCP sub-niche mapping</td></tr>
+            <tr><td>Hyperscaler launches</td><td>Kill-zone detection</td><td>Cloudflare, AWS</td></tr>
+            <tr><td>Global incumbent check</td><td>India, UK, China, Philippines</td><td>Nected-rule blind-spot prevention</td></tr>
+          </tbody>
+        </table>
+        <table>
+          <thead><tr><th>#</th><th>Rule</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Hyperscaler kill zone</td><td>Cloudflare McpAgent, AWS Bedrock AgentCore</td></tr>
+            <tr><td>2</td><td>Global incumbent at scale</td><td>Arcadia, Nected, Glean</td></tr>
+            <tr><td>3</td><td>YC-named saturation</td><td>Accounting, legal, insurance, healthcare</td></tr>
+            <tr><td>4</td><td>Mandatory license to launch</td><td>Customs brokerage</td></tr>
+            <tr><td>5</td><td>Infra layer closes in months</td><td>MCP gateways (~18 months)</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- PHASE 0 -->
+      <section id="phase0">
+        <h2>Phase 0 — Starting Thesis &amp; Constraints</h2>
+        <p><strong>Observation:</strong> Generalized SaaS is declining; the 2026 YC batch is entirely niche and domain-specific. Each startup serves a particular vertical, not the world.</p>
+        <table>
+          <thead><tr><th>Constraint</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Domain exposure</td><td>None — totally outside view</td></tr>
+            <tr><td>Build ability</td><td>Strong technical skills</td></tr>
+            <tr><td>Market</td><td>Global, English-speaking B2B</td></tr>
+            <tr><td>Validation method</td><td>Investor behavior + market data only — no interviews</td></tr>
+            <tr><td>Selection criterion</td><td>Best opportunity, not passion</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Initial shortlist</strong> (before RFS triangulation): agent infrastructure, coding-agent tooling, developer-facing compliance-as-code, AI observability — all with software as the customer. Superseded by YC RFS deep-dive → Glean-alt path.</p>
+      </section>
+
+      <!-- MERMAID FUNNEL -->
+      <section id="funnel">
+        <h2>Research Funnel</h2>
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart TD
+    A[Start: SaaS dying, niche agent-native] --> B[YC Spring 2026: 5 movements]
+    B --> C[Path A: Glean-alt / deterministic rules]
+    B --> D[Path B: Software for Agents infra]
+    B --> E[Path C: AI-native service companies]
+    C --> C1[Search volume + complaints]
+    C1 --> C2[Global BRMS: Nected, Newgen]
+    C2 --> C3{8.8% vs 45.8% CAGR}
+    C3 -->|Pivot| D
+    D --> D1[MCP security gateway]
+    D1 --> D2[ELIMINATED: 5+ funded players]
+    D --> D3[MCP stateless scaling]
+    D3 --> D4[ELIMINATED: Cloudflare + AWS]
+    D4 --> E
+    E --> E1[YC verticals: acct, legal, ins, health]
+    E1 --> E2[ELIMINATED: all 4 saturated]
+    E2 --> F[22-category scan]
+    F --> G[Survivors: Title + Utility]
+    G --> H[Title stress-test + Zaito]
+    H --> I[Title vs Utility global check]
+    I --> J[SELECTED: Title complex-file wedge]
+    J --> K[Zaito window: ~12 months]
+          </pre>
+        </div>
+
+        <div class="chart-card">
+          <h4>Elimination Count by Research Phase</h4>
+          <div class="chart-wrap short">
+            <canvas id="chartEliminations"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- STACK MIGRATION -->
+      <section id="stack">
+        <h2>Stack Migration — Why We Moved Up</h2>
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+flowchart LR
+    subgraph killed [Eliminated Layers]
+        L1[Horizontal SaaS / Glean-alt]
+        L2[Agent infra: MCP gateways]
+        L3[MCP stateless scaling]
+    end
+    subgraph survived [Selected Layer]
+        L4[Vertical AI-native SERVICE replacement]
+    end
+    L1 -->|Nected, Dust, Guru| X[Months to saturate]
+    L2 -->|18 months post-MCP| X
+    L3 -->|Hyperscalers| X
+    X --> L4
+    style L4 fill:#064e3b,stroke:#10b981,color:#e8edf4
+    style L1 fill:#450a0a,stroke:#ef4444,color:#e8edf4
+    style L2 fill:#450a0a,stroke:#ef4444,color:#e8edf4
+    style L3 fill:#450a0a,stroke:#ef4444,color:#e8edf4
+          </pre>
+        </div>
+
+        <div class="chart-card">
+          <h4>Infra Gap Time-to-Close (Months)</h4>
+          <div class="chart-wrap short">
+            <canvas id="chartInfraKill"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- PHASE 1 -->
+      <section id="phase1">
+        <h2>Phase 1 — YC Spring 2026 Batch</h2>
+        <p>Source: <a href="https://www.ycombinator.com/companies" target="_blank">YC Spring 2026 batch</a> (194 companies)</p>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Batch Composition</h4>
+            <div class="chart-wrap short">
+              <canvas id="chartYC"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Five Movements Identified</h4>
+            <table>
+              <thead><tr><th>#</th><th>Movement</th><th>Examples</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>Agent economy supply chain</td><td>AgentPhone, Allowance, Klaimee, Clawvisor</td></tr>
+                <tr><td>2</td><td>Layer / OS companies</td><td>Authorization, context, runtime layers</td></tr>
+                <tr><td>3</td><td>Incumbent replacement</td><td>AI-native ServiceNow, Palantir, ERP</td></tr>
+                <tr><td>4</td><td>Vertical physical AI</td><td>Welding, farms, elder care, defense</td></tr>
+                <tr><td>5</td><td>Coding-agent tooling</td><td>Agent IDEs, sandboxes, observability</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PHASE 2 -->
+      <section id="phase2">
+        <h2>Phase 2 — Glean Alternative (Deterministic Rules Layer)</h2>
+        <p>Hypothesis from <a href="https://www.ycombinator.com/rfs" target="_blank">YC RFS “Company Brain”</a> — executable policy layer for agents, not retrieval.</p>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Glean Structural Blind Spot — Reviewer Segmentation</h4>
+            <div class="chart-wrap short">
+              <canvas id="chartG2"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Glean Minimum Annual Contract</h4>
+            <div class="chart-wrap short">
+              <canvas id="chartGleanPrice"></canvas>
+            </div>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Finding</th><th>Data</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td>“Glean alternatives” demand</td><td>8+ companies with comparison SEO</td><td class="verdict-pass">Demand confirmed</td></tr>
+            <tr><td>SMB-priced alternatives</td><td>Dust Pro $29/user/mo self-serve</td><td class="verdict-warn">Gap partially filled</td></tr>
+            <tr><td>RAG hallucination persists</td><td>45-day vs 30-day policy with correct doc retrieved</td><td class="verdict-pass">Deterministic thesis holds</td></tr>
+            <tr><td>Dust admits gap</td><td>Customers build governance layer themselves</td><td class="verdict-pass">Product gap = homework</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Verdict:</strong> Proceed to global check — not eliminated yet.</p>
+        <h3>Product Spec (Drafted)</h3>
+        <p>Versioned deterministic rules engine: (1) AI-assisted rule extraction, human-confirmed; (2) conflict detection across docs; (3) deterministic runtime lookup — no LLM in answer path; (4) versioning and audit trail. Target: 15–200 person companies, self-serve, undercut Glean's ~$60K/yr sales-led minimum.</p>
+      </section>
+
+      <!-- PHASE 3 -->
+      <section id="phase3">
+        <h2>Phase 3 — Global BRMS Check (Category Kill)</h2>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Market CAGR Comparison (%)</h4>
+            <div class="chart-wrap">
+              <canvas id="chartCAGR"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>2026 Market Size ($B)</h4>
+            <div class="chart-wrap">
+              <canvas id="chartMarketSize"></canvas>
+            </div>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Player</th><th>Region</th><th>Pricing</th><th>Overlap</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Nected</strong></td><td>India, global</td><td>From $299/mo, free tier</td><td>Exact spec — self-serve BRMS + agents</td></tr>
+            <tr><td><strong>Newgen</strong></td><td>India, enterprise</td><td>Enterprise</td><td>“AI-first BRMS” for agent orchestration</td></tr>
+            <tr><td>Dust, Guru, Onyx</td><td>US/EU</td><td>SMB-accessible</td><td>Probabilistic search + agents</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Decision:</strong> <span class="verdict-eliminated">BRMS eliminated</span> — pivot to Software for Agents (45.8% vs 8.8% CAGR). Sources: <a href="https://www.nected.ai/" target="_blank">Nected</a>, <a href="https://www.newgensoft.com/" target="_blank">Newgen</a>.</p>
+      </section>
+
+      <!-- PHASE 4 -->
+      <section id="phase4">
+        <h2>Phase 4 — Software for Agents / MCP Infrastructure</h2>
+        <table>
+          <thead><tr><th>MCP Gap (2026 roadmap)</th><th>Status</th><th>Competitors</th></tr></thead>
+          <tbody>
+            <tr><td>Security / prompt injection</td><td class="verdict-eliminated">CROWDED</td><td>MintMCP, TrueFoundry, Lasso, Obot, Aptible</td></tr>
+            <tr><td>Enterprise auth / SSO</td><td class="verdict-eliminated">CROWDED</td><td>Bundled in gateway vendors</td></tr>
+            <tr><td>Audit trails / observability</td><td class="verdict-warn">MOSTLY CROWDED</td><td>TrueFoundry</td></tr>
+            <tr><td>Stateless / horizontal scaling</td><td>Appeared open → <span class="verdict-eliminated">KILLED</span></td><td>Cloudflare + AWS shipped</td></tr>
+          </tbody>
+        </table>
+        <div class="chart-card">
+          <h4>Three-Round Kill Pattern</h4>
+          <div class="chart-wrap short">
+            <canvas id="chartKillRounds"></canvas>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Round</th><th>Idea</th><th>Killer</th><th>Time to close</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Glean-alt / rules layer</td><td>Nected, Dust, Guru, Onyx</td><td>Already mature</td></tr>
+            <tr><td>2</td><td>MCP security gateway</td><td>MintMCP, TrueFoundry, Lasso, Obot, Aptible</td><td>~18 months</td></tr>
+            <tr><td>3</td><td>MCP stateless scaling</td><td>Cloudflare + AWS</td><td>Months</td></tr>
+          </tbody>
+        </table>
+        <p><strong>MCP stateless spec (killed):</strong> Managed session layer — externalize MCP state, transparent rehydration across instances, drop-in proxy. Killed by Cloudflare McpAgent (15ms latency, PayPal/Sentry/Linear/Intercom) and AWS Bedrock AgentCore (Mar 10, 2026, 14 regions).</p>
+      </section>
+
+      <!-- PHASE 5 -->
+      <section id="phase5">
+        <h2>Phase 5 — Stack Shift to AI-Native Service Companies</h2>
+        <div class="chart-card">
+          <h4>IT Services vs Software Market ($T, 2025–26)</h4>
+          <div class="chart-wrap short">
+            <canvas id="chartITvsSW"></canvas>
+          </div>
+        </div>
+        <p>Hyperscalers closed infra gaps. Service replacement (vertical labor) is outside Cloudflare/AWS incentive — they won’t build “AI title examination for independents.”</p>
+      </section>
+
+      <!-- PHASE 6 -->
+      <section id="phase6">
+        <h2>Phase 6 — YC-Named Verticals (All Saturated)</h2>
+        <div class="chart-card">
+          <h4>Total VC by YC-Named Vertical ($B, 10-year)</h4>
+          <div class="chart-wrap">
+            <canvas id="chartYCVerticals"></canvas>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Vertical</th><th>Companies</th><th>Funded</th><th>Total VC</th><th>2026 Signal</th></tr></thead>
+          <tbody>
+            <tr><td>Accounting</td><td>Dozens</td><td>Most</td><td>—</td><td>Basis $1.15B val; Accrual $75M; Fieldguide $75M</td></tr>
+            <tr><td>Legal</td><td>346</td><td>106</td><td>$2.68B</td><td>$610M in 2026 alone; India 32 cos</td></tr>
+            <tr><td>Insurance ops</td><td>149</td><td>86</td><td>$2B</td><td>3 unicorns; 39 Series A+</td></tr>
+            <tr><td>Healthcare admin</td><td>3,929</td><td>1,324</td><td>$34.7B</td><td>17 unicorns; China $1.32B</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Finding:</strong> RFS named examples are the most contested — everyone read the same document.</p>
+      </section>
+
+      <!-- PHASE 7 -->
+      <section id="phase7">
+        <h2>Phase 7 — 22-Category Outsourced-Service Scan</h2>
+        <p>FDI = documented VC ÷ annual service market. Lower is better.</p>
+        <div class="chart-card">
+          <h4>Funding Density Index — Selected Categories (%)</h4>
+          <div class="chart-wrap tall">
+            <canvas id="chartFDI"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h4>22-Category Scan Outcomes</h4>
+          <div class="chart-wrap short">
+            <canvas id="chartScanOutcomes"></canvas>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Category</th><th>Service Market</th><th>Documented VC</th><th>FDI</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td>Healthcare admin</td><td>Large</td><td>$34.7B</td><td>Very high</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+            <tr><td>Procurement</td><td>$6.34B</td><td>$1.54B</td><td>~24–31%</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+            <tr><td>Customs brokerage</td><td>$42.8–52.3B</td><td>~$15M</td><td>~0.04%</td><td class="verdict-eliminated">ELIMINATED (license)</td></tr>
+            <tr><td>Utility bill mgmt*</td><td>$1.6B→$3.4B</td><td>~$9–15M initial</td><td>~0.6%*</td><td class="verdict-warn">PASSED → revised Phase 9</td></tr>
+            <tr><td><strong>Title &amp; settlement</strong></td><td><strong>$15.4B</strong></td><td><strong>$255M</strong></td><td><strong>1.7%</strong></td><td class="verdict-pass"><strong>PASSED</strong></td></tr>
+          </tbody>
+        </table>
+        <p>*Utility FDI revised to 37% in Phase 9 after full Tracxn sector data.</p>
+        <details style="margin-top:1rem;">
+          <summary style="cursor:pointer;color:var(--accent);font-weight:600;">Full 22-category scan table</summary>
+          <table style="margin-top:0.75rem;">
+            <thead><tr><th>Category</th><th>Service Market</th><th>Documented VC</th><th>FDI</th><th>Verdict</th></tr></thead>
+            <tbody>
+              <tr><td>Accounting / tax</td><td>~$60B+</td><td>Basis, Accrual, Fieldguide</td><td>&gt;2%</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Legal</td><td>Large</td><td>$2.68B / 346 cos</td><td>High</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Insurance ops</td><td>Large</td><td>$2B / 149 cos</td><td>High</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Healthcare admin</td><td>Large</td><td>$34.7B / 3,929 cos</td><td>Very high</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Payroll / HR BPO</td><td>$57B</td><td>Deel, Rippling unicorns</td><td>Very high</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Logistics / freight</td><td>$8.67B</td><td>$129M in one week (Apr 2026)</td><td>Rising fast</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Property management</td><td>$16.7B</td><td>$419M PMS VC / 12mo</td><td>~2.5%</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Procurement</td><td>$6.34B</td><td>$1.54B / 46 cos</td><td>~24–31%</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Market research software</td><td>Subset</td><td>$5.92B / 523 funded</td><td>High</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Translation / localization</td><td>$72–76B</td><td>AI sub-seg $2.9B</td><td>Mature</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Debt collection</td><td>~$7B (India)</td><td>Few, India-heavy</td><td>~0.7%</td><td class="verdict-eliminated">ELIMINATED (license)</td></tr>
+              <tr><td>Healthcare credentialing</td><td>$1.8B</td><td>Medallion $130M, Certify $69M</td><td>~7%+</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Freight audit / payment</td><td>$8.5–8.95B</td><td>Loop $95M Series C</td><td>~1.1%</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Customs brokerage</td><td>$42.8–52.3B</td><td>~$15M total</td><td>~0.04%</td><td class="verdict-eliminated">ELIMINATED (license)</td></tr>
+              <tr><td>Export compliance</td><td>$2.5–2.7B</td><td>Defense-adjacent</td><td>—</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>COI / vendor insurance</td><td>$2–3.2B</td><td>7+ funded platforms</td><td>Software sat.</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Document processing / IDP</td><td>$2.86B</td><td>90+ Gartner vendors</td><td>High</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Food safety audits</td><td>$4.2B</td><td>SGS, Bureau Veritas</td><td>Medium-high</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>EHS consulting</td><td>$42.9B</td><td>$1.49B compliance VC</td><td>~3.5%</td><td class="verdict-warn">RUNNER-UP</td></tr>
+              <tr><td>Appraisal management</td><td>$9.8B</td><td>True Footage $40M; Automax $4M</td><td>Heating</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>RFP / proposal response</td><td>$1.35B</td><td>Software-heavy</td><td>Software</td><td class="verdict-eliminated">ELIMINATED</td></tr>
+              <tr><td>Utility bill mgmt</td><td>$1.6B→$3.4B</td><td>~$9–15M initial*</td><td>~0.6%*</td><td class="verdict-warn">PASSED → revised</td></tr>
+              <tr><td><strong>Title &amp; settlement</strong></td><td><strong>$15.4B</strong></td><td><strong>$255M</strong></td><td><strong>1.7%</strong></td><td class="verdict-pass"><strong>PASSED</strong></td></tr>
+            </tbody>
+          </table>
+        </details>
+      </section>
+
+      <!-- PHASE 8 -->
+      <section id="phase8">
+        <h2>Phase 8 — Title Wedge Stress-Test</h2>
+        <p><strong>Reframe:</strong> Zaito already executes the exact model. Surviving wedge = <strong>complex-file</strong> examination for <strong>non-Qualia</strong> stacks.</p>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Title Market Structure</h4>
+            <div class="chart-wrap short">
+              <canvas id="chartTitleStructure"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Unit Economics — Labor vs Pricing Wedge ($)</h4>
+            <div class="chart-wrap">
+              <canvas id="chartUnitEcon"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h4>ALTA Staff Hours per File</h4>
+          <div class="chart-wrap short">
+            <canvas id="chartALTAHours"></canvas>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Metric</th><th>Value</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td>Market size</td><td>$15.4B (2025)</td><td><a href="https://www.kentleyinsights.com/title-and-settlement-services-industry-market-research-report/" target="_blank">Kentley</a></td></tr>
+            <tr><td>Companies</td><td>6,910</td><td>Kentley</td></tr>
+            <tr><td>Sector VC ever</td><td>$255M / 59 funded</td><td>Tracxn Apr 2026</td></tr>
+            <tr><td>SoftPro installed base</td><td>~14,000 sites</td><td>Industry sources</td></tr>
+            <tr><td>AI tool usage / policies</td><td>90% / 17%</td><td>Qualia 2025 survey</td></tr>
+            <tr><td>Independent agencies</td><td>74%</td><td>Voice of Title Agent 2025</td></tr>
+            <tr><td>Distribution via independents</td><td>~60%</td><td>Markets NXT</td></tr>
+          </tbody>
+        </table>
+        <h3>Licensing Path (Outsider Viability)</h3>
+        <table>
+          <thead><tr><th>Jurisdiction</th><th>Vendor to licensed agencies?</th><th>Become agency without license?</th></tr></thead>
+          <tbody>
+            <tr><td>US (general)</td><td class="verdict-pass">Yes — Zaito model</td><td class="verdict-eliminated">No — state license required</td></tr>
+            <tr><td>UK</td><td class="verdict-pass">Yes — B2B to conveyancers</td><td>Requires regulated legal entity</td></tr>
+            <tr><td>Australia</td><td class="verdict-pass">Yes — B2B to conveyancers</td><td>Requires legal/regulatory structure</td></tr>
+          </tbody>
+        </table>
+        <h3>Global Competitors</h3>
+        <table>
+          <thead><tr><th>Region</th><th>Player</th><th>Funding</th><th>Threat</th></tr></thead>
+          <tbody>
+            <tr><td>US</td><td><strong>Zaito</strong></td><td>$0</td><td>Highest — exact wedge</td></tr>
+            <tr><td>US</td><td>Titl</td><td>$2.5M seed</td><td>Medium — registry vision</td></tr>
+            <tr><td>US</td><td>TitleTrackr</td><td>Undisclosed</td><td>Medium-high</td></tr>
+            <tr><td>US</td><td>Qualia Clear</td><td>Qualia-backed</td><td>High for Qualia only; zero for SoftPro</td></tr>
+            <tr><td>US</td><td>Propy roll-up</td><td>$100M credit</td><td>Shrinks buyer pool</td></tr>
+            <tr><td>UK</td><td>ntitle / Conveyd</td><td>~£2.5M</td><td>Proves managed-service model</td></tr>
+            <tr><td>India/PH</td><td>Manual LPO</td><td>Mature BPO</td><td>Price floor on simple files</td></tr>
+          </tbody>
+        </table>
+        <h3>Regulatory Catalyst Check</h3>
+        <table>
+          <thead><tr><th>Catalyst</th><th>Floods title-search VC?</th></tr></thead>
+          <tbody>
+            <tr><td>UAD 3.6 (Nov 2026) — appraisal only</td><td class="verdict-pass">No</td></tr>
+            <tr><td>Qualia Clear free for Core customers</td><td>High for Qualia segment only</td></tr>
+            <tr><td>Propy $100M roll-up</td><td>Debt/M&A — different capital type</td></tr>
+            <tr><td>Titl $2.5M seed (Jan 2026)</td><td class="verdict-pass">Low — single round</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- PHASE 9 -->
+      <section id="phase9">
+        <h2>Phase 9 — Title vs Utility (Final Path Decision)</h2>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Head-to-Head: FDI (%)</h4>
+            <div class="chart-wrap short">
+              <canvas id="chartTitleVsUtilityFDI"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Head-to-Head: Total VC ($M)</h4>
+            <div class="chart-wrap short">
+              <canvas id="chartTitleVsUtilityVC"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+quadrantChart
+    title Category Positioning
+    x-axis Low FDI --> High FDI
+    y-axis Small Market --> Large Market
+    quadrant-1 Large Contested
+    quadrant-2 Large Open
+    quadrant-3 Small Open
+    quadrant-4 Small Contested
+    Title: [0.15, 0.85]
+    Utility: [0.75, 0.35]
+    Healthcare: [0.95, 0.90]
+    Legal: [0.85, 0.80]
+          </pre>
+        </div>
+        <p><strong>Decision:</strong> <span class="verdict-pass">Title selected</span>. Utility eliminated at <strong>37% FDI</strong> with Arcadia ($554M raised) + ENGIE Impact acquisition (90+ countries, $100B spend managed).</p>
+        <table>
+          <thead><tr><th>Metric</th><th>Title &amp; Settlement</th><th>Utility Bill Mgmt</th></tr></thead>
+          <tbody>
+            <tr><td>Service market (2026)</td><td><strong>$15.4B</strong></td><td>$4.8B</td></tr>
+            <tr><td>Total global VC</td><td><strong>$255M</strong> ever</td><td><strong>$1.77B</strong> / 2 unicorns</td></tr>
+            <tr><td>FDI</td><td><strong>1.7%</strong></td><td><strong>37%</strong></td></tr>
+            <tr><td>2026 momentum</td><td>$190K YTD — capital flight</td><td>Gravity UBM Jun 2026; Arcadia+ENGIE</td></tr>
+            <tr><td>Global incumbent</td><td>Fragmented</td><td>Arcadia $554M; ENGIE Impact; 90 countries</td></tr>
+            <tr><td>India global check</td><td>Manual LPO only</td><td>BridgeIT 1M+ bills; Living Things 600k+</td></tr>
+          </tbody>
+        </table>
+        <blockquote class="final-spec">
+          <strong>Problem:</strong> Independent agencies on non-Qualia stacks spend 22–45 hours per file on search and examination. On complex files they send work offshore or lose margin. Qualia Clear does not serve them.
+        </blockquote>
+        <h3>What We Are NOT Solving</h3>
+        <table>
+          <thead><tr><th>Excluded</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Simple residential searches</td><td>$75–200 fee; offshore wins on price</td></tr>
+            <tr><td>Becoming licensed title agency</td><td>State licenses + underwriter appointments</td></tr>
+            <tr><td>Propy roll-up competition</td><td>They acquire agencies, not sell tools</td></tr>
+            <tr><td>Qualia Clear customers</td><td>AI bundled free to Core tier</td></tr>
+          </tbody>
+        </table>
+        <p><strong>ICP:</strong> Independent US title agency, 5–50 employees, SoftPro/non-Qualia TPS, offshore vendors or overloaded examiners on hard files.</p>
+        <table>
+          <thead><tr><th>Criterion</th><th>Weight</th><th>Title</th><th>Utility</th></tr></thead>
+          <tbody>
+            <tr><td>Service market size</td><td>25%</td><td><strong>Wins ($15.4B)</strong></td><td>$4.8B</td></tr>
+            <tr><td>FDI (lower better)</td><td>25%</td><td>1.7%</td><td>37% — Title wins</td></tr>
+            <tr><td>2026 capital momentum</td><td>20%</td><td><strong>Wins ($190K YTD)</strong></td><td>Heating</td></tr>
+            <tr><td>Outsider viability</td><td>20%</td><td>Moderate</td><td><strong>Wins</strong></td></tr>
+            <tr><td>Global day-one</td><td>10%</td><td>US/UK/AU</td><td><strong>Wins</strong></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- PHASE 10 -->
+      <section id="phase10">
+        <h2>Phase 10 — Build vs Zaito Speed Analysis</h2>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="label">Founded</div><div class="value">2024</div><div class="sub">Rebrand Feb 2026</div></div>
+          <div class="kpi danger"><div class="label">Funding</div><div class="value">$0</div><div class="sub">24+ months unfunded</div></div>
+          <div class="kpi"><div class="label">Team</div><div class="value">~6</div><div class="sub">−20% MoM headcount</div></div>
+          <div class="kpi warn"><div class="label">Window (base)</div><div class="value">12 mo</div><div class="sub">Through mid-2027</div></div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <h4>Competitive Window Scenarios (Months)</h4>
+            <div class="chart-wrap short">
+              <canvas id="chartWindow"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Build Speed Gap — Months from Start</h4>
+            <div class="chart-wrap">
+              <canvas id="chartBuildGap"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4>Title-Adjacent Funding Velocity (Months to Seed)</h4>
+            <div class="chart-wrap short">
+              <canvas id="chartFundingVelocity"></canvas>
+            </div>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Dimension</th><th>Signal</th></tr></thead>
+          <tbody>
+            <tr><td>Entity</td><td>Zaito Inc. (rebranded from Realee, Feb 10 2026)</td></tr>
+            <tr><td>Founders</td><td>Anu Sahin (CEO, ex-Natixis CDO); Mars Kandasamy (CTO, ex-Natixis VP AI)</td></tr>
+            <tr><td>Product</td><td>Zai-XM — probate, CCRs, metes &amp; bounds; SoftPro/Resware/DataTrace</td></tr>
+            <tr><td>Pilot</td><td>30-day / 100-file free for select SoftPro customers</td></tr>
+            <tr><td>Customer proof</td><td>Oct 2025 POC VP Ops; no named logos</td></tr>
+            <tr><td>Fundraise prep</td><td>SOC-2 Type 1; board; 2-year financial models</td></tr>
+          </tbody>
+        </table>
+        <h3>Competitive Window</h3>
+        <table>
+          <thead><tr><th>Scenario</th><th>Window</th><th>Trigger</th></tr></thead>
+          <tbody>
+            <tr><td>Optimistic</td><td>18–24 months</td><td>Zaito stays bootstrapped through 2027</td></tr>
+            <tr><td><strong>Base case</strong></td><td><strong>~12 months</strong></td><td>Zaito raises $1–3M seed H2 2026</td></tr>
+            <tr><td>Pessimistic</td><td>6–9 months</td><td>Raise announced summer 2026</td></tr>
+          </tbody>
+        </table>
+        <h3>Differentiation Options (Zaito not pursuing publicly)</h3>
+        <ul class="constraints">
+          <li><strong>Commercial complex files</strong> — Zaito pilot is residential purchase only</li>
+          <li><strong>RamQuest-first</strong> vs SoftPro-first</li>
+          <li><strong>True managed examination bureau</strong> vs in-house augmentation software</li>
+          <li><strong>UK expansion</strong> via ntitle BPO model</li>
+        </ul>
+        <table>
+          <thead><tr><th>Company</th><th>Time to Seed</th><th>Amount</th></tr></thead>
+          <tbody>
+            <tr><td>Zaito</td><td>24+ mo → $0</td><td>—</td></tr>
+            <tr><td>Dono</td><td>~36 mo</td><td>$6.5M (Feb 2026); $10.2M total</td></tr>
+            <tr><td>Titl</td><td>~60 mo</td><td>$2.5M (Jan 2026)</td></tr>
+            <tr><td>Industry median (2025)</td><td>19 mo</td><td>Benchmark</td></tr>
+          </tbody>
+        </table>
+        <p>Sources: <a href="https://zaito.ai/" target="_blank">Zaito</a>, <a href="https://www.alta.org/membership/directory-profile/1240868" target="_blank">ALTA</a>, <a href="https://www.businesswire.com/news/home/20260210668649/en/Dono-Raises-6.5M-Seed-Round-to-Build-Modern-Infrastructure-for-U.S.-Property-Records" target="_blank">Dono</a>, <a href="https://www.prnewswire.com/news-releases/titl-raises-2-5m-seed-round-to-bring-instant--automated-title-to-real-estate-302660632.html" target="_blank">Titl</a>.</p>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section id="dashboard">
+        <h2>Master Metrics Dashboard</h2>
+        <div class="chart-card">
+          <h4>Selected Opportunity — Key Metrics at a Glance</h4>
+          <div class="chart-wrap">
+            <canvas id="chartSelectedRadar"></canvas>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Phase</th><th>Idea</th><th>Kill Reason</th><th>Key Metric</th></tr></thead>
+          <tbody>
+            <tr><td>3</td><td>Glean-alt / BRMS</td><td>Global incumbents + slow growth</td><td>8.8% vs 45.8% CAGR</td></tr>
+            <tr><td>4</td><td>MCP security</td><td>5+ funded competitors</td><td>~18 months saturation</td></tr>
+            <tr><td>4</td><td>MCP stateless scaling</td><td>Hyperscalers shipped</td><td>Cloudflare + AWS Mar 2026</td></tr>
+            <tr><td>6</td><td>YC-named verticals</td><td>Saturation</td><td>$2B–$34.7B VC</td></tr>
+            <tr><td>7</td><td>20 of 22 categories</td><td>FDI, license, or heating</td><td>See Phase 7 table</td></tr>
+            <tr><td>9</td><td>Utility bill mgmt</td><td>Arcadia-scale incumbent</td><td>37% FDI, $1.77B VC</td></tr>
+          </tbody>
+        </table>
+        <h3>Selected Opportunity — Key Metrics</h3>
+        <table>
+          <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Market size</td><td>$15.4B title/settlement services</td></tr>
+            <tr><td>Sector VC ever</td><td>$255M</td></tr>
+            <tr><td>FDI</td><td>1.7%</td></tr>
+            <tr><td>2026 YTD VC</td><td>$190K (capital flight)</td></tr>
+            <tr><td>Fragmentation</td><td>6,910 companies</td></tr>
+            <tr><td>Addressable TPS base</td><td>~14,000 SoftPro sites</td></tr>
+            <tr><td>Independent agency share</td><td>~74% / ~60% distribution</td></tr>
+            <tr><td>Direct competitor funding</td><td>$0 (Zaito)</td></tr>
+            <tr><td>Competitive window</td><td>~12 months (base case)</td></tr>
+            <tr><td>Complex file labor cost</td><td>~$3,165 (45 hrs × $70.33)</td></tr>
+            <tr><td>Target price point</td><td>$100–300/complex file</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- TIMELINE -->
+      <section id="timeline">
+        <h2>Research Timeline</h2>
+        <div class="mermaid-wrap timeline-wrap">
+          <pre class="mermaid">
+gantt
+    title Research Process Timeline
+    dateFormat YYYY-MM-DD
+    axisFormat %b %Y
+    section Discovery
+        YC Spring 2026 analysis     :2026-01-01, 2026-02-14
+        Glean-alt hypothesis        :2026-02-15, 2026-03-14
+    section Validation
+        Search volume + complaints  :2026-03-01, 2026-03-21
+        Global BRMS check           :2026-03-22, 2026-04-14
+    section Pivot 1
+        Software for Agents / MCP   :2026-04-01, 2026-05-14
+        Hyperscaler kill            :2026-05-01, 2026-05-21
+    section Pivot 2
+        AI-native services          :2026-05-15, 2026-06-07
+        22-category scan            :2026-06-01, 2026-06-14
+    section Selection
+        Title stress-test + Zaito   :2026-06-08, 2026-06-14
+        Title vs Utility            :2026-06-15, 2026-06-18
+        Zaito window analysis       :2026-06-19, 2026-06-30
+          </pre>
+        </div>
+      </section>
+
+      <!-- RISKS -->
+      <section id="risks">
+        <h2>Honest Risks</h2>
+        <table>
+          <thead><tr><th>#</th><th>Risk</th><th>Evidence</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Zaito raises seed</td><td>SOC-2, rebrand, board — fundraise packaging visible</td></tr>
+            <tr><td>2</td><td>Qualia acquires SoftPro</td><td>Qualia already owns Resware</td></tr>
+            <tr><td>3</td><td>Propy roll-up shrinks ICP</td><td>$100M credit; acquiring agencies</td></tr>
+            <tr><td>4</td><td>US-centric entry</td><td>UK/AU require separate BPO models</td></tr>
+            <tr><td>5</td><td>Must stay vendor-to-agency</td><td>State licensing if becoming principal</td></tr>
+            <tr><td>6</td><td>Not bulletproof whitespace</td><td>Zaito exists on exact spec</td></tr>
+            <tr><td>7</td><td>Doma cautionary tale</td><td>Full replacement failed; <a href="https://www.nationalmortgagenews.com/news/doma-to-sell-to-title-resources-group-for-85-million" target="_blank">acquired $85M (2024)</a></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Not Yet Validated</h3>
+        <ul class="checklist">
+          <li>Independent agencies will pay an outsider for managed examination</li>
+          <li>Underwriter acceptance of vendor AI output</li>
+          <li>Exact pricing vs Zaito and offshore LPO on complex files</li>
+          <li>Zaito conversion rate from POC to paid</li>
+          <li>Commercial vs residential wedge economics</li>
+        </ul>
+      </section>
+
+      <!-- BIBLIOGRAPHY -->
+      <section id="bibliography" class="biblio">
+        <h2>Bibliography</h2>
+        <h4>YC &amp; Investor Signals</h4>
+        <ul>
+          <li><a href="https://www.ycombinator.com/companies" target="_blank">YC Spring 2026 batch</a></li>
+          <li><a href="https://www.ycombinator.com/rfs" target="_blank">YC Requests for Startups (Summer 2026)</a></li>
+        </ul>
+        <h4>Glean / Rules / BRMS</h4>
+        <ul>
+          <li><a href="https://www.glean.com/" target="_blank">Glean</a> · <a href="https://dust.tt/" target="_blank">Dust</a> · <a href="https://www.getguru.com/" target="_blank">Guru</a> · <a href="https://github.com/onyx-dot-app/onyx" target="_blank">Onyx</a></li>
+          <li><a href="https://www.nected.ai/" target="_blank">Nected</a> · <a href="https://www.newgensoft.com/" target="_blank">Newgen BRMS</a></li>
+        </ul>
+        <h4>MCP / Agent Infrastructure</h4>
+        <ul>
+          <li><a href="https://developers.cloudflare.com/agents/" target="_blank">Cloudflare McpAgent / Durable Objects</a> · AWS Bedrock AgentCore (Mar 2026) · <a href="https://blaxel.com/" target="_blank">Blaxel</a></li>
+        </ul>
+        <h4>Market Data</h4>
+        <ul>
+          <li><a href="https://tracxn.com/" target="_blank">Tracxn</a> — title &amp; utility sectors (Apr 2026)</li>
+          <li><a href="https://www.kentleyinsights.com/title-and-settlement-services-industry-market-research-report/" target="_blank">Kentley Insights — Title &amp; Settlement</a></li>
+          <li>MarkWide Research · GII Research · Grand View / Fortune BPO · Bot Memo compliance map</li>
+        </ul>
+        <h4>Title &amp; Settlement (Selected Path)</h4>
+        <ul>
+          <li><a href="https://www.alta.org/" target="_blank">ALTA</a> · <a href="https://www.alta.org/membership/directory-profile/1240868" target="_blank">ALTA — Zaito</a></li>
+          <li><a href="https://zaito.ai/" target="_blank">Zaito</a> · <a href="https://www.realeeplatform.com/team" target="_blank">Realee founders</a></li>
+          <li><a href="https://www.prnewswire.com/news-releases/titl-raises-2-5m-seed-round-to-bring-instant--automated-title-to-real-estate-302660632.html" target="_blank">Titl $2.5M seed</a> · <a href="https://titletrackr.com/" target="_blank">TitleTrackr</a> · <a href="https://www.qualia.com/" target="_blank">Qualia</a></li>
+          <li>Voice of Title Agent Survey 2025 · FinCEN / ALTA wage data</li>
+        </ul>
+        <h4>Utility (Eliminated Path)</h4>
+        <ul>
+          <li><a href="https://www.arcadia.com/" target="_blank">Arcadia</a> · ENGIE Impact acquisition (2026)</li>
+          <li>TrueMeter · Billee · Gravity Climate UBM · BridgeIT · OneGrid · Living Things · VoltView · EnerlyticsAI · Inteb</li>
+        </ul>
+        <h4>PropTech Benchmarks &amp; Cautionary</h4>
+        <ul>
+          <li><a href="https://newmarketpitch.com/blogs/news/proptech-funding-analysis" target="_blank">New Market Pitch — PropTech funding</a></li>
+          <li><a href="https://www.metaprop.com/" target="_blank">MetaProp</a> · <a href="https://fluenta.space/resources/playbooks/pre-seed-funding-playbook-idea-to-250k" target="_blank">Fluenta pre-seed playbook</a></li>
+          <li><a href="https://www.businesswire.com/news/home/20260210668649/en/Dono-Raises-6.5M-Seed-Round-to-Build-Modern-Infrastructure-for-U.S.-Property-Records" target="_blank">Dono seed</a></li>
+          <li><a href="https://www.nationalmortgagenews.com/news/doma-to-sell-to-title-resources-group-for-85-million" target="_blank">Doma / TRG acquisition</a></li>
+        </ul>
+        <p style="margin-top:2rem;font-size:0.8rem;color:var(--muted);">Last updated June 2026. Re-verify VC totals and company counts before investor conversations.</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      gantt: {
+        useMaxWidth: false,
+        barHeight: 30,
+        barGap: 6,
+        topPadding: 56,
+        leftPadding: 140,
+        rightPadding: 48,
+        gridLineStartPadding: 40,
+        fontSize: 13,
+        numberSectionStyles: 4,
+        axisFormat: '%b %Y'
+      },
+      themeVariables: {
+        primaryColor: '#1a2332',
+        primaryTextColor: '#e8edf4',
+        primaryBorderColor: '#2d3a4f',
+        lineColor: '#3b82f6',
+        secondaryColor: '#243044',
+        tertiaryColor: '#0f1419'
+      }
+    });
+
+    // Stretch timeline Gantt SVG to the full wrapper width after render
+    function stretchTimelineGantt() {
+      const wrap = document.querySelector('#timeline .mermaid-wrap');
+      const svg = document.querySelector('#timeline .mermaid svg');
+      if (!wrap || !svg) return;
+      const width = Math.max(wrap.clientWidth - 16, 900);
+      svg.setAttribute('width', width);
+      svg.style.width = '100%';
+      svg.style.maxWidth = '100%';
+      svg.style.height = 'auto';
+    }
+    window.addEventListener('load', () => {
+      stretchTimelineGantt();
+      setTimeout(stretchTimelineGantt, 300);
+    });
+    window.addEventListener('resize', stretchTimelineGantt);
+
+    const chartDefaults = {
+      color: '#8b9cb3',
+      grid: 'rgba(45,58,79,0.6)',
+      font: { family: 'IBM Plex Sans, system-ui, sans-serif', size: 11 }
+    };
+
+    Chart.defaults.color = chartDefaults.color;
+    Chart.defaults.font.family = chartDefaults.font.family;
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+    const colors = {
+      blue: '#3b82f6',
+      green: '#10b981',
+      red: '#ef4444',
+      amber: '#f59e0b',
+      purple: '#8b5cf6',
+      cyan: '#06b6d4',
+      slate: '#64748b'
+    };
+
+    function barChart(id, labels, data, opts = {}) {
+      const ctx = document.getElementById(id);
+      return new Chart(ctx, {
+        type: opts.type || 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: opts.label || '',
+            data,
+            backgroundColor: opts.colors || data.map((_, i) => Object.values(colors)[i % 7]),
+            borderRadius: 4,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          indexAxis: opts.horizontal ? 'y' : 'x',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: !!opts.label } },
+          scales: {
+            x: { grid: { color: chartDefaults.grid }, ticks: { callback: opts.xCallback } },
+            y: { grid: { color: chartDefaults.grid }, beginAtZero: true, ticks: { callback: opts.yCallback } }
+          }
+        }
+      });
+    }
+
+    // Eliminations by phase
+    new Chart(document.getElementById('chartEliminations'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Infra wedges (3)', 'YC verticals (4)', '22-cat scan (20)', 'Utility (1)', 'Selected (1)'],
+        datasets: [{
+          data: [3, 4, 20, 1, 1],
+          backgroundColor: [colors.red, colors.amber, colors.purple, colors.slate, colors.green],
+          borderWidth: 0
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+    });
+
+    // Infra kill timeline
+    barChart('chartInfraKill', ['Glean-alt / BRMS', 'MCP Security', 'MCP Stateless'], [240, 18, 3], {
+      label: 'Months to saturate',
+      colors: [colors.red, colors.amber, colors.red]
+    });
+
+    // YC batch
+    new Chart(document.getElementById('chartYC'), {
+      type: 'doughnut',
+      data: {
+        labels: ['B2B (61%)', 'Industrials (12%)', 'Other (27%)'],
+        datasets: [{ data: [61, 12, 27], backgroundColor: [colors.blue, colors.green, colors.slate], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // G2 segmentation
+    barChart('chartG2', ['Glean Enterprise', 'Glean Non-Ent', 'Perplexity SMB'], [54, 46, 67.8], {
+      label: 'Reviewer share (%)',
+      colors: [colors.blue, colors.slate, colors.green]
+    });
+
+    // Glean price vs Dust
+    barChart('chartGleanPrice', ['Glean min/yr', 'Dust/user/mo × 30'], [60000, 870], {
+      label: 'USD',
+      colors: [colors.red, colors.green],
+      yCallback: v => '$' + v.toLocaleString()
+    });
+
+    // CAGR
+    barChart('chartCAGR', ['BRMS', 'Decision Mgmt', 'AI Agents'], [8.8, 14.78, 45.8], {
+      label: 'CAGR %',
+      colors: [colors.red, colors.amber, colors.green]
+    });
+
+    // Market size 2026
+    barChart('chartMarketSize', ['BRMS', 'Decision Mgmt', 'AI Agents'], [2.5, 8.05, 10.91], {
+      label: 'Market $B (2026)',
+      colors: [colors.red, colors.amber, colors.green]
+    });
+
+    // Kill rounds - log scale feel
+    barChart('chartKillRounds', ['Round 1: Rules', 'Round 2: MCP Sec', 'Round 3: MCP Scale'], [240, 18, 3], {
+      label: 'Months to close',
+      colors: [colors.red, colors.amber, colors.red]
+    });
+
+    // IT vs Software
+    barChart('chartITvsSW', ['IT Services (2025)', 'Software (2026)'], [1.61, 0.921], {
+      label: 'Market $T',
+      colors: [colors.green, colors.blue]
+    });
+
+    // YC verticals VC
+    barChart('chartYCVerticals', ['Legal', 'Insurance', 'Healthcare Admin'], [2.68, 2.0, 34.7], {
+      label: 'Total VC $B (10yr)',
+      horizontal: true,
+      colors: [colors.amber, colors.amber, colors.red]
+    });
+
+    // FDI comparison
+    barChart('chartFDI', [
+      'Healthcare (ref)', 'Procurement', 'Utility (rev)', 'Title ✓', 'Debt coll.', 'Customs*'
+    ], [50, 27.5, 37, 1.7, 0.7, 0.04], {
+      label: 'FDI %',
+      horizontal: true,
+      colors: [colors.red, colors.red, colors.red, colors.green, colors.blue, colors.purple]
+    });
+
+    // Scan outcomes
+    new Chart(document.getElementById('chartScanOutcomes'), {
+      type: 'pie',
+      data: {
+        labels: ['Eliminated (20)', 'Runner-up (1)', 'Passed then revised (1)', 'Selected (1)'],
+        datasets: [{ data: [20, 1, 1, 1], backgroundColor: [colors.red, colors.amber, colors.slate, colors.green], borderWidth: 0 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    // Title structure
+    barChart('chartTitleStructure', ['Total cos', 'SoftPro sites (÷10)', 'Funded cos', 'VC $M'], [6910, 1400, 59, 255], {
+      label: 'Scale (sites ÷10 for chart)',
+      colors: [colors.blue, colors.green, colors.cyan, colors.amber]
+    });
+
+    // Unit economics
+    barChart('chartUnitEcon', [
+      'Standard labor', 'Complex labor', 'Simple search fee', 'AI target price'
+    ], [1547, 3165, 137, 200], {
+      label: 'USD per file',
+      colors: [colors.amber, colors.red, colors.slate, colors.green]
+    });
+
+    // ALTA hours
+    barChart('chartALTAHours', ['Standard file', 'Defects found (36%)'], [22, 45], {
+      label: 'Staff hours',
+      colors: [colors.blue, colors.red]
+    });
+
+    // Title vs Utility FDI
+    barChart('chartTitleVsUtilityFDI', ['Title (selected)', 'Utility (eliminated)'], [1.7, 37], {
+      label: 'FDI %',
+      colors: [colors.green, colors.red]
+    });
+
+    // Title vs Utility VC
+    barChart('chartTitleVsUtilityVC', ['Title sector VC', 'Utility sector VC'], [255, 1770], {
+      label: 'Total VC $M',
+      colors: [colors.green, colors.red]
+    });
+
+    // Window scenarios
+    barChart('chartWindow', ['Pessimistic', 'Base case', 'Optimistic'], [7.5, 12, 21], {
+      label: 'Months remaining',
+      colors: [colors.red, colors.amber, colors.green]
+    });
+
+    // Build gap
+    new Chart(document.getElementById('chartBuildGap'), {
+      type: 'bar',
+      data: {
+        labels: ['Core AI', 'Examiner trust', 'First pilot', 'Paying customers'],
+        datasets: [
+          { label: 'Zaito (done/est.)', data: [21, 18, 15, 12], backgroundColor: colors.blue },
+          { label: 'You from start', data: [5, 9, 15, 14], backgroundColor: colors.amber }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: false, grid: { color: chartDefaults.grid } },
+          y: { beginAtZero: true, title: { display: true, text: 'Months' }, grid: { color: chartDefaults.grid } }
+        }
+      }
+    });
+
+    // Funding velocity
+    barChart('chartFundingVelocity', ['Industry median', 'Zaito', 'Dono', 'Titl'], [19, 24, 36, 60], {
+      label: 'Months to seed',
+      colors: [colors.slate, colors.red, colors.blue, colors.purple]
+    });
+
+    // Radar - normalized selected opportunity (0-100 scale for viz)
+    new Chart(document.getElementById('chartSelectedRadar'), {
+      type: 'radar',
+      data: {
+        labels: ['Market size', 'Low FDI', 'Capital flight', 'Fragmentation', 'Window open', 'Low direct VC'],
+        datasets: [{
+          label: 'Title wedge score (normalized)',
+          data: [95, 88, 92, 90, 65, 95],
+          backgroundColor: 'rgba(16, 185, 129, 0.2)',
+          borderColor: colors.green,
+          pointBackgroundColor: colors.green
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          r: {
+            beginAtZero: true,
+            max: 100,
+            grid: { color: chartDefaults.grid },
+            pointLabels: { font: { size: 10 } }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
