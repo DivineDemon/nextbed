@@ -1,6 +1,6 @@
-# Outreach emails — Phase 6 validation (8–12 SoftPro agencies)
+# Outreach emails — Phase 6 validation (7 active contacts)
 
-Use these for W1 recruitment. Lead with **research framing**, not a product pitch. Replace bracketed placeholders before sending.
+Use these for W1 recruitment and follow-ups. Lead with **research framing**, not a product pitch. Replace bracketed placeholders before sending.
 
 **ICP reminder:** Independent SoftPro agency, 5–50 staff, commercial or mixed book, TX/FL preferred, uses or open to external exam on hard files.
 
@@ -249,14 +249,20 @@ Would a 20-minute follow-up next week work?
 
 ---
 
-## Outreach log checklist (W1)
+## Active outreach pipeline (W1 — sent 2026-06-26)
 
-Track 8–12 sends in `interview-scorecard.csv` (Outreach tab) or your CRM:
+Track replies in `outreach-log.csv`. All sends used template 1 (email).
 
-| # | Company | Contact | Role | Channel | Sent | Reply | Call scheduled |
-|---|---------|---------|------|---------|------|-------|----------------|
-| O01 | | | | | | | |
-| … | | | | | | | |
-| O12 | | | | | | | |
+| ID | Company | Contact | Email | Sent | Reply | Call scheduled |
+|----|---------|---------|-------|------|-------|----------------|
+| O01 | Texan Title Commercial | Cody Sobieski | csobieski@texasstatetitle.com | 2026-06-26 | | |
+| O02 | Riverway Title | John D. Hammond | jhammond@riverwaytitle.com | 2026-06-26 | | |
+| O03 | Select Title | Spencer Cearley | spencer.cearley@select-title.com | 2026-06-26 | | |
+| O04 | Sendera Title | Chuck Brown | cbrown@senderatitle.com | 2026-06-26 | | |
+| O05 | Sage Title | Read Hammond | read@sagetitleco.com | 2026-06-26 | | |
+| O09 | Florida Agency Network | Andrea Somers | andrea.somers@flagency.net | 2026-06-26 | | |
+| O12 | Monarch Title of Texas | Linda Kraner | info@monarchtitleoftexas.com | 2026-06-26 | | |
 
-**Yield target:** 5–10 qualified calls from 8–12 outreach (ICP screen ≥4/6).
+**Bump window:** Jun 29–Jul 1 (template 7) for non-responders.
+
+**Yield target (revised):** 3–5 qualified calls from 7 sends. Gate 1 still requires ≥5 interviews — add supplemental outreach only if pipeline stalls after bump.
