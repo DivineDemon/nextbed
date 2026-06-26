@@ -1,6 +1,6 @@
 # Active Outreach Pipeline — W1
 
-7 targets contacted via email (template 1) on **2026-06-26**. Focus is on tracking replies and scheduling discovery calls — no additional cold outreach planned until bump window (day 3–5 post-send).
+6 targets contacted via email (template 1) on **2026-06-26**. Focus is on tracking replies and scheduling discovery calls — no additional cold outreach planned until bump window (day 3–5 post-send).
 
 **SoftPro confidence key:** Confirmed = public testimonial or job posting; Medium = independent agency likely on major TPS in market; Low = not verified — confirm on discovery call (Q2).
 
@@ -65,7 +65,7 @@
 
 ---
 
-## Tier B / C — Also contacted (sent)
+## Tier B — Also contacted (sent)
 
 ### O09 — Florida Agency Network (FL)
 | Field | Value |
@@ -78,24 +78,13 @@
 | **Company LI** | https://www.linkedin.com/company/florida-agency-network |
 | **Status** | Sent 2026-06-26 — awaiting reply |
 
-### O12 — Monarch Title of Texas (TX)
-| Field | Value |
-|-------|-------|
-| **Why viable** | Independent; 16 employees; Houston metro; ICP size sweet spot |
-| **SoftPro** | Low — validate Q2 |
-| **Caveat** | Primarily residential; commercial volume may be below ICP threshold |
-| **Primary** | Linda Kraner, VP Ops — info@monarchtitleoftexas.com — 832-604-2104 |
-| **Alt** | Robert Ricketts, CEO — rricketts@mtotx.com |
-| **Company LI** | https://www.linkedin.com/company/monarch-title-of-texas |
-| **Status** | Sent 2026-06-26 — awaiting reply |
-
 ---
 
 ## Next actions
 
 1. **Jun 29–Jul 1:** Bump non-responders with template 7 from `outreach-emails.md`.
 2. **On reply:** Update `outreach-log.csv` (`reply_date`, `call_date`); assign `agency_id` in `interview-scorecard.csv`.
-3. **Yield target (revised):** 3–5 qualified calls from 7 sends (ICP screen ≥4/6). Gate 1 still needs ≥5 interviews — plan supplemental outreach only if pipeline stalls after bump.
+3. **Yield target (revised):** 2–4 qualified calls from 6 sends (ICP screen ≥4/6). Gate 1 still needs ≥5 interviews — plan supplemental outreach only if pipeline stalls after bump.
 
 ---
 
@@ -108,6 +97,7 @@
 | O08 | The Title Link | No contact email — LinkedIn only; not contacted |
 | O10 | Members Title Agency | No contact email — LinkedIn only; not contacted |
 | O11 | Paramount Title Florida | `inquiries@paramounttitlefl.com` bounced (address no longer exists) |
+| O12 | Monarch Title of Texas | `info@monarchtitleoftexas.com` bounced (431 cannot verify user). Alt on file: rricketts@mtotx.com — not attempted |
 
 ---
 

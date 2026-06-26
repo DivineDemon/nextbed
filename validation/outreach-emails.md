@@ -1,4 +1,4 @@
-# Outreach emails — Phase 6 validation (7 active contacts)
+# Outreach emails — Phase 6 validation (6 active contacts)
 
 Use these for W1 recruitment and follow-ups. Lead with **research framing**, not a product pitch. Replace bracketed placeholders before sending.
 
@@ -261,8 +261,7 @@ Track replies in `outreach-log.csv`. All sends used template 1 (email).
 | O04 | Sendera Title | Chuck Brown | cbrown@senderatitle.com | 2026-06-26 | | |
 | O05 | Sage Title | Read Hammond | read@sagetitleco.com | 2026-06-26 | | |
 | O09 | Florida Agency Network | Andrea Somers | andrea.somers@flagency.net | 2026-06-26 | | |
-| O12 | Monarch Title of Texas | Linda Kraner | info@monarchtitleoftexas.com | 2026-06-26 | | |
 
 **Bump window:** Jun 29–Jul 1 (template 7) for non-responders.
 
-**Yield target (revised):** 3–5 qualified calls from 7 sends. Gate 1 still requires ≥5 interviews — add supplemental outreach only if pipeline stalls after bump.
+**Yield target (revised):** 2–4 qualified calls from 6 sends. Gate 1 still requires ≥5 interviews — add supplemental outreach only if pipeline stalls after bump.
